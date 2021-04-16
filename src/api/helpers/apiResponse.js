@@ -15,6 +15,10 @@ exports.successResponseWithData = function (res, msg, data) {
 	return res.status(200).json(resData);
 };
 
+exports.successResponseWithToken = function (res,resData) {
+	return res.status(200).json(resData);
+};
+
 exports.ErrorResponse = function (res, msg) {
 	var data = {
 		status: 0,

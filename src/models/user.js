@@ -9,4 +9,6 @@ const mongodb = require('mongodb');
 exports.insertSignupData = function(db,collectionName,data){
     var collection = db.collection(collectionName);
     collection.insertOne(data);
+    return data;
 };
+

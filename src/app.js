@@ -7,7 +7,8 @@ const app = express();
 const mongoURL = require('./config');
 //routes
 var apiRouter = require('./api/routes/api');
-
+var passport = require('passport');
+const { applyPassportStrategy }=require('./config/passport');
 
 
 //mongoDB connection
@@ -32,6 +33,7 @@ MongoClient.connect(MONGODB_URL,{useUnifiedTopology:true}).then(client=>{
 //     console.log("middleware working");
 //     next();
 // });
+applyPassportStrategy(passport);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

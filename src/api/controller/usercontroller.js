@@ -3,11 +3,13 @@ const bcrypt = require("bcrypt");
 
 var db = require("../../app");
 const { body, validationResult } = require("express-validator");
-const { insertSignupData } = require("../../models/user");
+const { insertSignupData, searchUser } = require("../../models/user");
 
 var collectionName = "logincred";
-
-
+const config = require("../../config/index");
+const underscoreId = require("../../config/index");
+const jwt = require('jsonwebtoken');
+var mongo = require('mongodb');
 
 //validation and /signup route post function
 exports.signup = [
@@ -42,8 +44,18 @@ exports.signup = [
                     "password":hash
                 } 
                 var dbOb=db.getDb();
-                insertSignupData(dbOb,collectionName,loginData);
-                return apiResponse.successResponseWithData(res,"Registration Successful");                   
+                var insertData =new Promise(function(resolve,reject){resolve(insertSignupData(dbOb,collectionName,loginData));});
+                insertData.then((data)=>{
+                    //prepare JWT token
+                    const jwtpayload={_id:data._id};
+                    const token = jwt.sign({jwtpayload},config.passport.secret,{
+                        expiresIn:12000,
+                    });
+                    const userToReturn = { ...{data} };
+                    delete userToReturn.data.password;
+                    userToReturn.data.token=token;
+                    return apiResponse.successResponseWithToken(res,userToReturn);
+                });                 
                 });
             }
         }
@@ -72,12 +84,21 @@ exports.sigin = [
                         bcrypt.compare(req.body.password,data.password,function (err,same) {
                             if(same)
                             {
-                                let loginData = {
-                                    _id: data._id,
-                                    useremail: data.useremail
-                                }
+                                // let loginData = {
+                                //     _id: data._id,
+                                //     useremail: data.useremail
+                                // }
+                                
                                 //authentication  token is to be created using logindata
-                                return apiResponse.successResponseWithData(res,"Login Success",loginData);
+                                const jwtpayload={_id:data._id};
+                                const token = jwt.sign({jwtpayload},config.passport.secret,{
+                                    expiresIn:12000,
+                                });
+                                const userToReturn = { ...{data} };
+                                delete userToReturn.data.password;
+                                userToReturn.data.token=token;
+                                return apiResponse.successResponseWithToken(res,userToReturn);
+                
                             }
                             else
                             {
@@ -94,4 +115,35 @@ exports.sigin = [
         }
         catch(err){return apiResponse.ErrorResponse(res,err);}
     }
+];
+
+exports.signout = [
+
+];
+
+exports.getprofile=[
+(req,res)=>{
+    try
+    {
+        let a=db.getDb();
+        logincredcollection=a.collection(collectionName);
+        var o_id = new mongo.ObjectID(req.params.id);
+        var findUser=new Promise(function(resolve,reject){resolve(logincredcollection.findOne({id:o_id}))});
+        findUser.then((userInfo)=>{
+            return apiResponse.successResponseWithData(res,"Done",userInfo);
+        });
+        
+    }
+    catch(error){
+        return apiResponse.notFoundResponse(res,"user not find");
+    }
+}
+];
+
+exports.updateprofile=[
+
+];
+
+exports.deleteprofile=[
+
 ];
