@@ -28,11 +28,8 @@ MongoClient.connect(MONGODB_URL,{useUnifiedTopology:true}).then(client=>{
     console.error(error))
 
 
-//some functions
-// app.use((req,res,next)=>{
-//     console.log("middleware working");
-//     next();
-// });
+// app.use(passport.initialize());
+// app.use(passport.session());
 applyPassportStrategy(passport);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

@@ -10,6 +10,7 @@ const config = require("../../config/index");
 const underscoreId = require("../../config/index");
 const jwt = require('jsonwebtoken');
 var mongo = require('mongodb');
+const passport = require('passport');
 
 //validation and /signup route post function
 exports.signup = [
@@ -46,14 +47,18 @@ exports.signup = [
                 var dbOb=db.getDb();
                 var insertData =new Promise(function(resolve,reject){resolve(insertSignupData(dbOb,collectionName,loginData));});
                 insertData.then((data)=>{
+
+                    
                     //prepare JWT token
-                    const jwtpayload={_id:data._id};
-                    const token = jwt.sign({jwtpayload},config.passport.secret,{
-                        expiresIn:12000,
+                    const jwtpayload={_id:data._id,iat:Date.now()};
+                    const token = jwt.sign(jwtpayload,config.passport.secret,{
+                        expiresIn:config.passport.expiresIn,
                     });
                     const userToReturn = { ...{data} };
                     delete userToReturn.data.password;
                     userToReturn.data.token=token;
+
+
                     return apiResponse.successResponseWithToken(res,userToReturn);
                 });                 
                 });
@@ -84,15 +89,10 @@ exports.sigin = [
                         bcrypt.compare(req.body.password,data.password,function (err,same) {
                             if(same)
                             {
-                                // let loginData = {
-                                //     _id: data._id,
-                                //     useremail: data.useremail
-                                // }
-                                
-                                //authentication  token is to be created using logindata
-                                const jwtpayload={_id:data._id};
-                                const token = jwt.sign({jwtpayload},config.passport.secret,{
-                                    expiresIn:12000,
+   
+                                const jwtpayload={_id:data._id,iat:Date.now()};
+                                const token = jwt.sign(jwtpayload,config.passport.secret,{
+                                    expiresIn:config.passport.expiresIn,
                                 });
                                 const userToReturn = { ...{data} };
                                 delete userToReturn.data.password;
@@ -128,9 +128,10 @@ exports.getprofile=[
         let a=db.getDb();
         logincredcollection=a.collection(collectionName);
         var o_id = new mongo.ObjectID(req.params.id);
-        var findUser=new Promise(function(resolve,reject){resolve(logincredcollection.findOne({id:o_id}))});
+        var findUser=new Promise(function(resolve,reject){resolve(logincredcollection.findOne({_id:o_id}))});
         findUser.then((userInfo)=>{
-            return apiResponse.successResponseWithData(res,"Done",userInfo);
+            delete userInfo.password;
+            return apiResponse.successResponseWithData(res,"Success",userInfo);
         });
         
     }
@@ -141,9 +142,44 @@ exports.getprofile=[
 ];
 
 exports.updateprofile=[
-
+    (req,res)=>{
+        try
+        {
+            let a=db.getDb();
+            logincredcollection=a.collection(collectionName);
+            var o_id = new mongo.ObjectID(req.params.id);
+            var newData = {
+                username:req.body.username
+            }
+            var newvalues={ $set: newData};
+            var findUser=new Promise(function(resolve,reject){resolve(logincredcollection.updateOne({_id:o_id},newvalues))});
+            findUser.then((userInfo)=>{
+                return apiResponse.ModificationResponseWithData(res,"Modified",userInfo.result.nModified);
+            });
+            
+        }
+        catch(error){
+            return apiResponse.notFoundResponse(res,"user not find");
+        }
+    }
 ];
 
 exports.deleteprofile=[
+    (req,res)=>{
+        try
+        {
+            let a=db.getDb();
+            logincredcollection=a.collection(collectionName);
+            var o_id = new mongo.ObjectID(req.params.id);
+            var findUser=new Promise(function(resolve,reject){resolve(logincredcollection.deleteOne({_id:o_id}))});
+            findUser.then((userInfo)=>{
+                return apiResponse.ModificationResponseWithData(res,"Deleted");
+            });
+            
+        }
+        catch(error){
+            return apiResponse.notFoundResponse(res,"user not find");
+        }
+    }
 
 ];
