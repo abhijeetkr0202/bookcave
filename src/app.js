@@ -1,52 +1,83 @@
 const express = require('express');
-const { func, forbidden, assert } = require('joi');
 const mongodb= require('mongodb');
-var MongoClient = require('mongodb').MongoClient;
-
+const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const mongoURL = require('./config');
-//routes
-var apiRouter = require('./api/routes/api');
-var passport = require('passport');
+const apiRouter = require('./api/routes/api');
+const passport = require('passport');
 const { applyPassportStrategy }=require('./config/passport');
 
 
-//mongoDB connection
-const MONGODB_URL = process.env.MONGODB_URL;
-var dbObj;
-var mongoclient;
-MongoClient.connect(MONGODB_URL,{useUnifiedTopology:true}).then(client=>{
-    console.log("Connnected to Database");
-    mongoclient = client;
-    const db = client.db('bookcaveDB');
-    dbObj=db;
-   
-    //route prefixes
-    app.use(apiRouter);
-})
-.catch(error=>
-    console.error(error))
+let dbObj;
+var mongoClient;
 
 
-// app.use(passport.initialize());
-// app.use(passport.session());
-applyPassportStrategy(passport);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+/**
+ * 
+ * @param {string} MONGODB_URL  - MongoDB connection String
+ * @description Setups database connection 
+ */
 
+function initDB(MONGODB_URL)
+{
+    MongoClient.connect(MONGODB_URL,{useUnifiedTopology:true}).then(client=>{
+        console.log("Connnected to Database");
+        mongoClient = client;
+        dbObj = client.db('bookcaveDB'); 
+        app.use(apiRouter); 
+    })
+    .catch(error=>
+        console.error(error))
+}
 
-function getDb() {
+/**
+ * 
+ * @returns database object recieved from MongoClient Connection 
+ */
+ function getDb() {
     return dbObj;
 }
 
-// function to close mongoDB connection
-function shutdown(){
-    mongoclient.close(()=>{
+
+/**
+ * @description Closes mongoDb connection when called
+ * */
+ function shutdown(){
+    mongoClient.close(()=>{
         console.log("MongoDB connection closed.");
     });
 }
 
 
+
+
+
+const MONGODB_URL = process.env.MONGODB_URL;
+
+initDB(MONGODB_URL);    //Creating Database connection
+
+
+
+
+
+applyPassportStrategy(passport);
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @description Closes mongoDB connection
+ */
 process.on('exit',shutdown);
 process.on('SIGINT',shutdown);
 process.on('SIGTERM',shutdown);

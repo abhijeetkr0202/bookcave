@@ -13,11 +13,11 @@ router.post('/signin',usercontroller.sigin);
 
 // router.post('/signout',usercontroller.signout);
 
-router.get('/profile/:id/',passport.authenticate('jwt', { session: false }),usercontroller.getprofile);
+router.get('/profile',passport.authenticate('jwt', { session: false }),usercontroller.getprofile);
 
-router.put('/profile/:id',passport.authenticate('jwt', { session: false }),usercontroller.updateprofile);
+router.put('/profile',passport.authenticate('jwt', { session: false }),usercontroller.updateprofile);
 
-router.delete('/profile/:id',passport.authenticate('jwt', { session: false }),usercontroller.deleteprofile);
+router.delete('/profile',passport.authenticate('jwt', { session: false }),usercontroller.deleteprofile);
 
 
 
