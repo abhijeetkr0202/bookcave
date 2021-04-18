@@ -1,11 +1,11 @@
 const express = require('express');
-const mongodb= require('mongodb');
+const mongodb = require('mongodb');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const mongoURL = require('./config');
 const apiRouter = require('./api/routes/api');
 const passport = require('passport');
-const { applyPassportStrategy }=require('./config/passport');
+const { applyPassportStrategy } = require('./config/passport');
 
 
 let dbObj;
@@ -18,23 +18,22 @@ var mongoClient;
  * @description Setups database connection 
  */
 
-function initDB(MONGODB_URL)
-{
-    MongoClient.connect(MONGODB_URL,{useUnifiedTopology:true}).then(client=>{
+function initDB(MONGODB_URL) {
+    MongoClient.connect(MONGODB_URL, { useUnifiedTopology: true }).then(client => {
         console.log("Connnected to Database");
         mongoClient = client;
-        dbObj = client.db('bookcaveDB'); 
-        app.use(apiRouter); 
+        dbObj = client.db('bookcaveDB');
+        app.use(apiRouter);
     })
-    .catch(error=>
-        console.error(error))
+        .catch(error =>
+            console.error(error))
 }
 
 /**
  * 
  * @returns database object recieved from MongoClient Connection 
  */
- function getDb() {
+function getDb() {
     return dbObj;
 }
 
@@ -42,8 +41,8 @@ function initDB(MONGODB_URL)
 /**
  * @description Closes mongoDb connection when called
  * */
- function shutdown(){
-    mongoClient.close(()=>{
+function shutdown() {
+    mongoClient.close(() => {
         console.log("MongoDB connection closed.");
     });
 }
@@ -78,13 +77,13 @@ app.use(express.urlencoded({ extended: false }));
 /**
  * @description Closes mongoDB connection
  */
-process.on('exit',shutdown);
-process.on('SIGINT',shutdown);
-process.on('SIGTERM',shutdown);
-process.on('SIGKILL',shutdown);
-process.on('uncaughtException',shutdown);
+process.on('exit', shutdown);
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+process.on('SIGKILL', shutdown);
+process.on('uncaughtException', shutdown);
 
 
 
-module.exports.getDb=getDb;
-module.exports=app;
+module.exports.getDb = getDb;
+module.exports = app;

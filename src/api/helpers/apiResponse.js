@@ -21,7 +21,7 @@ exports.ModificationResponseWithData = function (res, msg, data) {
 	return res.status(200).json(resData);
 };
 
-exports.successResponseWithToken = function (res,resData) {
+exports.successResponseWithToken = function (res, resData) {
 	return res.status(200).json(resData);
 };
 

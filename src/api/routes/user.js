@@ -1,23 +1,23 @@
 const passport = require("passport");
 const router = require(".");
 const usercontroller = require("../controller/usercontroller");
-router.get('/user',(req,res,next)=>{
+router.get('/user', (req, res, next) => {
     res.status(200).json({
-        message:'All users are fetched'
+        message: 'All users are fetched'
     });
 });
 
-router.post('/signup',usercontroller.signup);
+router.post('/signup', usercontroller.signup);
 
-router.post('/signin',usercontroller.sigin);
+router.post('/signin', usercontroller.sigin);
 
 // router.post('/signout',usercontroller.signout);
 
-router.get('/profile',passport.authenticate('jwt', { session: false }),usercontroller.getprofile);
+router.get('/profile', passport.authenticate('jwt', { session: false }), usercontroller.getprofile);
 
-router.put('/profile',passport.authenticate('jwt', { session: false }),usercontroller.updateprofile);
+router.put('/profile', passport.authenticate('jwt', { session: false }), usercontroller.updateprofile);
 
-router.delete('/profile',passport.authenticate('jwt', { session: false }),usercontroller.deleteprofile);
+router.delete('/profile', passport.authenticate('jwt', { session: false }), usercontroller.deleteprofile);
 
 
 
