@@ -3,7 +3,7 @@ const mongodb = require('mongodb');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const mongoURL = require('./config');
-const apiRouter = require('./api/routes/api');
+const apiRouterV1 = require('./api/v1/routes/api');
 const passport = require('passport');
 const { applyPassportStrategy } = require('./config/passport');
 
@@ -23,7 +23,7 @@ function initDB(MONGODB_URL) {
         console.log("Connnected to Database");
         mongoClient = client;
         dbObj = client.db('bookcaveDB');
-        app.use(apiRouter);
+        app.use('/v1',apiRouterV1);
     })
         .catch(error =>
             console.error(error))
@@ -31,7 +31,7 @@ function initDB(MONGODB_URL) {
 
 /**
  * 
- * @returns database object recieved from MongoClient Connection 
+ * @returns database object from MongoClient Connection 
  */
 function getDb() {
     return dbObj;
