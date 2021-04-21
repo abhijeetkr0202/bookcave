@@ -5,14 +5,14 @@ let collectionName = "logincred";
 
 
 
-var validateUsername = body('username').isLength({ min: 3 }).trim().withMessage("Username is required")
+let validateUsername = body('username').isLength({ min: 3 }).trim().withMessage("Username is required")
 
-var validateUseremail = body('useremail').trim().isEmail().withMessage("Valid email address required")
+let validateUseremail = body('useremail').trim().isEmail().withMessage("Valid email address required")
 
 
-var validatePassword = body("password").isLength({ min: 1 }).trim().withMessage("Password must be specified")
+let validatePassword = body("password").isLength({ min: 1 }).trim().withMessage("Password must be specified")
 
-var isDuplicateUser = body('useremail').custom((value) => {
+let isDuplicateUser = body('useremail').custom((value) => {
 
     return db.getDb().collection(collectionName).findOne({ "useremail": value }).then((data) => {
         if (data) {

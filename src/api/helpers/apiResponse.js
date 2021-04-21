@@ -1,12 +1,12 @@
 exports.successResponse = function (res, msg) {
-	var data = {
+	let data = {
 		message: msg
 	};
 	return res.status(200).json(data);
 };
 
 exports.successResponseWithData = function (res, msg, data) {
-	var resData = {
+	let resData = {
 		message: msg,
 		data: data
 	};
@@ -14,7 +14,7 @@ exports.successResponseWithData = function (res, msg, data) {
 };
 
 exports.ModificationResponseWithData = function (res, msg, data) {
-	var resData = {
+	let resData = {
 		message: msg,
 		nModified: data
 	};
@@ -26,21 +26,21 @@ exports.successResponseWithToken = function (res, resData) {
 };
 
 exports.ErrorResponse = function (res, msg) {
-	var data = {
+	let data = {
 		message: msg,
 	};
 	return res.status(500).json(data);
 };
 
 exports.notFoundResponse = function (res, msg) {
-	var data = {
+	let data = {
 		message: msg,
 	};
 	return res.status(404).json(data);
 };
 
 exports.validationErrorWithData = function (res, msg, data) {
-	var resData = {
+	let resData = {
 		message: msg,
 		data: data
 	};
@@ -48,7 +48,7 @@ exports.validationErrorWithData = function (res, msg, data) {
 };
 
 exports.unauthorizedResponse = function (res, msg) {
-	var data = {
+	let data = {
 		message: msg,
 	};
 	return res.status(401).json(data);

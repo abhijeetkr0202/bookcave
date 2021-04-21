@@ -1,7 +1,7 @@
-var express = require("express");
+let express = require("express");
 const app = express();
-var userRouter = require("./user");
-var bookRouter = require("./book");
+let userRouter = require("./user");
+let bookRouter = require("./book");
 
 app.use("/user/",userRouter);
 app.use("/book/",bookRouter);

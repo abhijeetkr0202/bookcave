@@ -1,21 +1,20 @@
 const router = require(".");
+const passport = require("passport");
+const bookcontroller = require("../controller/bookcontroller");
 
 
 
-router.get('/recent/:id',(req,res,next)=>{
-    res.status(200).json({
-        message:'All recent books are fetched'
-    });
-});
-
-router.get('recent/:uid');
-router.post('add/:bid');
-router.post('fetch/:bid');
-router.get('/shelf/:uid');
-router.get('shelf/:uid/:bid');
-router.post('notes/:bid');
-router.put('notes/:bid');
-router.delete('notes/:bid');
-router.delete('del/:bid');
-router.get('def/:word');
+router.get('/recent');
+// router.post('/add',passport.authenticate('jwt', { session: false }),bookcontroller.addbookFunc);
+router.post('/fetch');
+router.get('/shelf');
+router.get('/shelf/:bid');
+// router.post('notes/:bid');
+// router.put('notes/:bid');
+// router.delete('notes/:bid');
+router.delete('/del/:bid');
+router.get('/def/:word');
 module.exports = router;
+
+
+//last visited date time to be put in books schema....add on route used to updatebookdetails called when someone is done reading book....updates lastvisitedon and lastvisitedpage and markedpages array

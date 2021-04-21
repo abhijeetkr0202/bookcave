@@ -2,14 +2,16 @@ const express = require('express');
 const mongodb = require('mongodb');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
-const mongoURL = require('./config');
-const apiRouterV1 = require('./api/v1/routes/api');
 const passport = require('passport');
+
+
+const mongoURL = require('./config').mongoURL;
+const apiRouterV1 = require('./api/v1/routes/api');
 const { applyPassportStrategy } = require('./config/passport');
 
 
 let dbObj;
-var mongoClient;
+let mongoClient;
 
 
 /**
@@ -39,7 +41,7 @@ function getDb() {
 
 
 /**
- * @description Closes mongoDb connection when called
+ * @description Closes mongoDb connection 
  * */
 function shutdown() {
     mongoClient.close(() => {
@@ -51,7 +53,7 @@ function shutdown() {
 
 
 
-const MONGODB_URL = process.env.MONGODB_URL;
+const MONGODB_URL = mongoURL;
 
 initDB(MONGODB_URL);    //Creating Database connection
 
