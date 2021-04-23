@@ -3,33 +3,68 @@ const mongodb = require('mongodb');
 const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const passport = require('passport');
+const http = require('http');
+
 
 
 const mongoURL = require('./config').mongoURL;
 const apiRouterV1 = require('./api/v1/routes/api');
 const { applyPassportStrategy } = require('./config/passport');
 
+const port = require('./config').port;
 
-let dbObj;
-let mongoClient;
+
+
+let dbObj=null;
+let mongoClient=null;
+const MONGODB_URL = mongoURL;
+
+
+
+
+
 
 
 /**
  * 
  * @param {string} MONGODB_URL  - MongoDB connection String
- * @description Setups database connection 
+ * @description Setups database connection and starts server 
  */
 
-function initDB(MONGODB_URL) {
-    MongoClient.connect(MONGODB_URL, { useUnifiedTopology: true }).then(client => {
+function initServer(MONGODB_URL) {
+    MongoClient.connect(MONGODB_URL, { useUnifiedTopology: true })
+    .catch(error =>console.error(error))
+    .then(client => {
         console.log("Connnected to Database");
         mongoClient = client;
         dbObj = client.db('bookcaveDB');
-        app.use('/v1',apiRouterV1);
-    })
-        .catch(error =>
-            console.error(error))
+    }).catch((error)=>{
+        console.error(error);
+    }).then(()=>{
+        const server = http.createServer(app);
+        return Promise.resolve(server.listen(port));
+    }).catch((error)=>{
+        console.error(error);
+    }).then(()=>{
+        console.log("SERVER STARTED AR PORT NUMBER "+port);
+            applyPassportStrategy(passport);
+            app.use(express.json());
+            app.use(express.urlencoded({ extended: false }));
+            app.use('/v1',apiRouterV1);
+            process.on('exit', shutdown);
+            process.on('SIGINT', shutdown);
+            process.on('SIGTERM', shutdown);
+            process.on('SIGKILL', shutdown);
+            process.on('uncaughtException', shutdown);
+    }).catch((error)=>{
+        console.error(error);
+    });
 }
+
+
+
+
+
 
 /**
  * 
@@ -53,17 +88,15 @@ function shutdown() {
 
 
 
-const MONGODB_URL = mongoURL;
-
-initDB(MONGODB_URL);    //Creating Database connection
 
 
+initServer(MONGODB_URL);    //Creating Database connection
 
 
 
-applyPassportStrategy(passport);
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+
+
 
 
 
@@ -79,13 +112,5 @@ app.use(express.urlencoded({ extended: false }));
 /**
  * @description Closes mongoDB connection
  */
-process.on('exit', shutdown);
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
-process.on('SIGKILL', shutdown);
-process.on('uncaughtException', shutdown);
-
-
-
 module.exports.getDb = getDb;
 module.exports = app;

@@ -9,7 +9,7 @@ const apiResponse = require("../../helpers/apiResponse");
 let db = require("../../../app");
 const passportFunctions = require("../../../config/passport");
 const UserValidator = require("../../middlewares/validator");
-
+let SchemaValidator = require('../../../models/user');
 
 
 let collectionName = "logincred"; //Database collection to be used in UserController
@@ -21,7 +21,30 @@ let collectionName = "logincred"; //Database collection to be used in UserContro
  * @param {object} dbObject 
  * @returns data object
  */
-function insertSignupData(dbObject) {
+function insertSignupData(dbObject) { 
+    // SchemaValidator.userSchemaValidator();
+    // dbObject.db.createCollection("logincred",{
+    //     validator: {
+    //         $jsonSchema: {
+    //             bsonType:"object",
+    //             required:["username","useremail","password"],
+    //             properties:{
+    //                 username:{
+    //                     bsonType:"string",
+    //                     description:"String allowed and is required"
+    //                 },
+    //                 useremail:{
+    //                     bsonType:"string",
+    //                     description:"String allowed and is required"
+    //                 },
+    //                 password:{
+    //                     bsonType:"bindata",
+    //                     description:"Hashed password"
+    //                 }
+    //             }
+    //         }
+    //     }
+    // })
     dbObject.db.collection(dbObject.collectionName).insertOne(dbObject.data);
     return dbObject.data;
 
@@ -96,7 +119,7 @@ function signupFunc(req, res) {
                 db: db.getDb(),
                 collectionName: collectionName,
                 data: signUpData
-            }
+            }  
             return Promise.resolve(insertSignupData(dataObject));
         }).catch((error) => {
             return apiResponse.ErrorResponse(res, error)
@@ -122,7 +145,7 @@ function signupFunc(req, res) {
  * @returns apiResponse
  */
 function signinFunc(req, res) {
-    const errors = validationResult(req);
+    let errors = validationResult(req);
     if (!errors.isEmpty()) {
         return apiResponse.validationErrorWithData(res, "validation Error", errors.array());
     }
@@ -130,12 +153,13 @@ function signinFunc(req, res) {
         findUser({ useremail: req.body.useremail }).then(data => {
             if (data) {
 
-                bcrypt.compare(req.body.password, data.password).then((same) => {
-                    if (same) {
-                        return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
-                    }
-                    return apiResponse.unauthorizedResponse(res, "Wrong password");
-                })
+                bcrypt.compare(req.body.password, data.password)
+                    .then((same) => {
+                        if (same) {
+                            return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
+                        }
+                        return apiResponse.unauthorizedResponse(res, "Wrong password");
+                    })
             }
             else {
                 return apiResponse.unauthorizedResponse(res, "Wrong Credentials")
@@ -164,13 +188,14 @@ function getprofile
     logincredcollection = db.getDb().collection(collectionName);
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
 
-    findUser({ _id: o_id }).then((userInfo) => {
-        delete userInfo.password;
-        delete userInfo._id;
-        return apiResponse.successResponseWithData(res, "Success", userInfo);
-    }).catch((error) => {
-        return apiResponse.notFoundResponse(res, "Failed");
-    });
+    findUser({ _id: o_id })
+        .then((userInfo) => {
+            delete userInfo.password;
+            delete userInfo._id;
+            return apiResponse.successResponseWithData(res, "Success", userInfo);
+        }).catch((error) => {
+            return apiResponse.notFoundResponse(res, "Failed");
+        });
 
 };
 
@@ -191,11 +216,12 @@ function editprofile(req, res) {
 
     let newvalues = { $set: newData };
 
-    updateUser({ _id: o_id }, newvalues).then((userInfo) => {
-        return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
-    }).catch((error) => {
-        return apiResponse.notFoundResponse(res, "user not find");
-    });
+    updateUser({ _id: o_id }, newvalues)
+        .then((userInfo) => {
+            return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
+        }).catch((error) => {
+            return apiResponse.notFoundResponse(res, "user not find");
+        });
 };
 
 
@@ -214,7 +240,8 @@ function deleteprofile(req, res) {
     logincredcollection = db.getDb().collection(collectionName);
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
 
-    deleteUser({ _id: o_id }).then(() => {
+    deleteUser({ _id: o_id })
+    .then(() => {
         return apiResponse.ModificationResponseWithData(res, "Deleted");
     }).catch((error) => {
         return apiResponse.notFoundResponse(res, "user not find");

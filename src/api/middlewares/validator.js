@@ -1,4 +1,4 @@
-const { body } = require("express-validator");
+const { body, check } = require("express-validator");
 let db = require("../../app");
 let collectionName = "logincred";
 
@@ -10,7 +10,7 @@ let validateUsername = body('username').isLength({ min: 3 }).trim().withMessage(
 let validateUseremail = body('useremail').trim().isEmail().withMessage("Valid email address required")
 
 
-let validatePassword = body("password").isLength({ min: 1 }).trim().withMessage("Password must be specified")
+let validatePassword = body('password').isLength({ min: 1 }).trim().withMessage("Password must be specified")
 
 let isDuplicateUser = body('useremail').custom((value) => {
 
@@ -21,9 +21,26 @@ let isDuplicateUser = body('useremail').custom((value) => {
     })
 });
 
+
+
+let validateBooktitle = body('booktitle').isLength({ min:1 }).trim().withMessage("Book title is required").withMessage("Book title must be a string")
+
+let validatelastVisitedPage = check('lastVisitedPage').isNumeric().withMessage("Integers required");
+
+let validatelastVisitedOn = body('lastVisitedOn').trim().isString().withMessage("Integer required");
+
+//add validation for array of marked pages to be used when updated afterwards using body
+
+
+
+
 module.exports = {
     validateUsername,
     validateUseremail,
     validatePassword,
-    isDuplicateUser
+    isDuplicateUser,
+
+    validateBooktitle,
+    validatelastVisitedOn,
+    validatelastVisitedPage
 }

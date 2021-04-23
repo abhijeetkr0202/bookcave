@@ -6,17 +6,20 @@ const mongo = require('mongodb');
 const apiResponse = require('../../helpers/apiResponse');
 let db = require("../../../app")
 const passportFunctions = require("../../../config/passport");
+const bookValidator = require("../../middlewares/validator");
 
 
-// const multer  = require('multer');
-// let upload = multer({dest:"../../../uploads/"});
 
 
 let userCollection = "logincred";
 let collectionName= "books";
 
 
-
+/**
+ * @description Functions that inserts book data in database
+ * @param {object} dbObject 
+ * @returns object with book data
+ */
 function insertBookData (dbObject){
     let collection = dbObject.db.collection(dbObject.collectionName);
     collection.insertOne(dbObject.data);
@@ -31,7 +34,6 @@ function insertBookData (dbObject){
  * @returns apiResponse
  */
 function addbookFunc(req,res){
-    try{
         const errors = validationResult(req);
         if(!errors.isEmpty()){
             return apiResponse.validationErrorWithData(res,"Validation Error",errors.array());
@@ -40,12 +42,15 @@ function addbookFunc(req,res){
         else
         {
             let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+            req.body.lastVisitedOn = Date.now().toString()
             let bookData = {
                 "booktitle": req.body.booktitle,
                 "bookfilepath":"somefuncreturningPath",
-                "lastvisited":0,
+                "lastVisitedPage":req.body.lastisitedPage,
                 "markedpages":[],
-                "user_id":uid
+                "user_id":uid,
+                "uploadedOn": Date.now().toString(),
+                "lastVisitedOn": req.body.lastVisitedOn
             }
             let dataObject = {
                 db: db.getDb(),
@@ -57,13 +62,11 @@ function addbookFunc(req,res){
             });
             insertData.then((data) => {
                 return apiResponse.successResponse(res,"Uploaded");
+            }).catch((error)=>{
+                console.error(error);
             });
 
         }
-    }
-    catch(err){
-        return apiResponse.ErrorResponse(res,err);
-    }
 }
 
 
@@ -72,15 +75,16 @@ function addbookFunc(req,res){
 
 
 
-//Arrays to be exported to route functions
-// let bookUploadFunctions = [
-//     upload.single(),
-//     addbookFunc
-    
 
-// ];
+// Arrays to be exported to route functions
+let bookUploadFunctions = [
+    bookValidator.validateBooktitle,
+    bookValidator.validatelastVisitedPage,
+    bookValidator.validatelastVisitedOn,
+    addbookFunc
+];
 
 
-// module.exports={
-//     bookUploadFunctions
-// }
+module.exports={
+    bookUploadFunctions
+}
