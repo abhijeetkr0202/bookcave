@@ -46,7 +46,7 @@ function addbookFunc(req,res){
             let bookData = {
                 "booktitle": req.body.booktitle,
                 "bookfilepath":"somefuncreturningPath",
-                "lastVisitedPage":req.body.lastisitedPage,
+                "lastVisitedPage":req.body.lastVisitedPage,
                 "markedpages":[],
                 "user_id":uid,
                 "uploadedOn": Date.now().toString(),
@@ -72,19 +72,68 @@ function addbookFunc(req,res){
 
 
 
+/**
+ * @description return array of books from db using user id
+ * @param {object} dbobj 
+ * @param {mongo.ObjectID} id 
+ * @returns 
+ */
+function findbooks(dbobj,id)
+{
+    return new Promise((resolve,reject)=>{
+        // let resArr = dbobj.collection(collectionName).aggregate({"user_id":id},{"$project":{"user_id":0,"markedpages":0,"lastVisitedPage":0}}).toArray();
+        let resArr = dbobj.collection(collectionName).aggregate({"user_id":id}).toArray();
+        resolve(resArr);
+    });
+}
+
+
+/**
+ * @description Returns api response with list of books for logged in user
+ * @param {object} req 
+ * @param {object} res 
+ */
+function listbookFunc(req,res){
+    let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+
+    findbooks(db.getDb(),uid).
+    then((resArr)=>{
+        resArr.forEach(book => {
+            delete book.user_id;
+            delete book.lastVisitedPage;
+            delete book.markedpages;
+        });
+        return apiResponse.successResponseWithData(res,"Successful",resArr)
+    }).catch((error)=>{
+        console.error(error);
+    });
+}
+
+
+
+
+
+
+
+
+
 
 
 
 
 // Arrays to be exported to route functions
-let bookUploadFunctions = [
+let bookUploadFunction = [
     bookValidator.validateBooktitle,
     bookValidator.validatelastVisitedPage,
     bookValidator.validatelastVisitedOn,
     addbookFunc
 ];
 
+let bookListFunction = [
+    listbookFunc
+];
 
 module.exports={
-    bookUploadFunctions
+    bookUploadFunction,
+    bookListFunction
 }
