@@ -21,7 +21,7 @@ let collectionName = "logincred"; //Database collection to be used in UserContro
  * @param {object} dbObject 
  * @returns data object
  */
-function insertSignupData(dbObject) { 
+function insertSignupData(dbObject) {
     // SchemaValidator.userSchemaValidator();
     // dbObject.db.createCollection("logincred",{
     //     validator: {
@@ -58,12 +58,12 @@ function insertSignupData(dbObject) {
 /**
  * 
  * @description FindUser in database 
- * @param {Object} query 
+ * @param {Object} paramObj
  * @returns Promise , resolved(userdata)
  */
-function findUser(query) {
+function findUser(paramObj) {
     return new Promise((resolve, reject) => {
-        resolve(db.getDb().collection(collectionName).findOne(query));
+        resolve(paramObj.db.collection(paramObj.collectionName).findOne(paramObj.query));
     })
 };
 
@@ -73,9 +73,9 @@ function findUser(query) {
  * @param {object} updatedData 
  * @returns 
  */
-function updateUser(query, updatedData) {
+function updateUser(dbobj,query,newValues) {
     return new Promise((resolve, reject) => {
-        resolve(logincredcollection.updateOne(query, updatedData));
+        resolve(dbobj.updateOne(query, newValues));
     })
 };
 
@@ -119,7 +119,7 @@ function signupFunc(req, res) {
                 db: db.getDb(),
                 collectionName: collectionName,
                 data: signUpData
-            }  
+            }
             return Promise.resolve(insertSignupData(dataObject));
         }).catch((error) => {
             return apiResponse.ErrorResponse(res, error)
@@ -150,7 +150,13 @@ function signinFunc(req, res) {
         return apiResponse.validationErrorWithData(res, "validation Error", errors.array());
     }
     else {
-        findUser({ useremail: req.body.useremail }).then(data => {
+        let paramobj={
+            query:{ useremail: req.body.useremail },
+            db:db.getDb(),
+            collectionName:collectionName,
+
+        }
+        findUser(paramobj).then(data => {
             if (data) {
 
                 bcrypt.compare(req.body.password, data.password)
@@ -182,13 +188,16 @@ function signinFunc(req, res) {
  * @param {object} res 
  * @returns 
  */
-function getprofile
-    (req, res) {
+function getprofile(req, res) {
 
     logincredcollection = db.getDb().collection(collectionName);
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-
-    findUser({ _id: o_id })
+    let paramObj = {
+        query: { "_id": o_id },
+        collectionName: collectionName,
+        db: db.getDb()
+    }
+    findUser(paramObj)
         .then((userInfo) => {
             delete userInfo.password;
             delete userInfo._id;
@@ -208,7 +217,6 @@ function getprofile
  * @returns 
  */
 function editprofile(req, res) {
-    logincredcollection = db.getDb().collection(collectionName);
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
     let newData = {
         username: req.body.username
@@ -216,7 +224,14 @@ function editprofile(req, res) {
 
     let newvalues = { $set: newData };
 
-    updateUser({ _id: o_id }, newvalues)
+    // let paramobj={
+    //     query:{ _id: o_id },
+    //     db:db.getDb(),
+    //     collectionName:collectionName
+    // }
+    let query = {_id:o_id};
+    let logincredcollection = db.getDb().collection(collectionName);
+    updateUser(logincredcollection,query,newvalues)
         .then((userInfo) => {
             return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
         }).catch((error) => {
@@ -241,11 +256,11 @@ function deleteprofile(req, res) {
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
 
     deleteUser({ _id: o_id })
-    .then(() => {
-        return apiResponse.ModificationResponseWithData(res, "Deleted");
-    }).catch((error) => {
-        return apiResponse.notFoundResponse(res, "user not find");
-    });
+        .then(() => {
+            return apiResponse.ModificationResponseWithData(res, "Deleted");
+        }).catch((error) => {
+            return apiResponse.notFoundResponse(res, "user not find");
+        });
 
 
 

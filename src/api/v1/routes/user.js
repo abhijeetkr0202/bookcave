@@ -14,7 +14,7 @@ router.get('/profile', passport.authenticate('jwt', { session: false }), usercon
 
 router.put('/profile', passport.authenticate('jwt', { session: false }), usercontroller.editprofile);
 
-router.delete('/profile', passport.authenticate('jwt', { session: false }), usercontroller.deleteprofile);
+router.delete('/profile', passport.authenticate('jwt', { session: false }), usercontroller.deleteprofile);//also delete books for that users
 
 
 
