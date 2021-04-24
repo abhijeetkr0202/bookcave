@@ -259,22 +259,29 @@ function updateBookdata(dbobj,query,newvalues) {
  */
 function updateMarkedPagesFunc(req,res)
 {   
-    let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-    let bid = new mongo.ObjectID(req.params.bid);
-    let newData = {
-        markedpages: req.body.markedpages
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return apiResponse.validationErrorWithData(res,"Validation Error",errors.array());
     }
-    let newvalues = { $set: newData };
-    let bookcollection = db.getDb().collection(collectionName);
-    let query={_id:bid,user_id:uid};
-
-    
-    updateBookdata(bookcollection,query,newvalues)
-        .then((Info) => {
-            return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
-        }).catch((error) => {
-            return apiResponse.notFoundResponse(res,error);
-        });
+    else
+    {
+         let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+         let bid = new mongo.ObjectID(req.params.bid);
+         let newData = {
+             markedpages: req.body.markedpages
+         }
+         let newvalues = { $set: newData };
+         let bookcollection = db.getDb().collection(collectionName);
+         let query={_id:bid,user_id:uid};
+     
+     
+         updateBookdata(bookcollection,query,newvalues)
+             .then((Info) => {
+                 return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
+             }).catch((error) => {
+                 return apiResponse.notFoundResponse(res,error);
+             });
+    }
 }
 
 
@@ -304,6 +311,7 @@ let RecentBookFunction= [
 ]
 
 let MarkedPagesFunction =[
+    bookValidator.validateArray,
     updateMarkedPagesFunc
 ]
 

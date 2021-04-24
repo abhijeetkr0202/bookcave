@@ -29,7 +29,8 @@ let validatelastVisitedPage = check('lastVisitedPage').isNumeric().withMessage("
 
 let validatelastVisitedOn = body('lastVisitedOn').trim().isString().withMessage("Integer required");
 
-//add validation for array of marked pages to be used when updated afterwards using body
+let validateArray = body('markedpages').isArray().withMessage("Array input required")
+
 
 
 
@@ -42,5 +43,6 @@ module.exports = {
 
     validateBooktitle,
     validatelastVisitedOn,
-    validatelastVisitedPage
+    validatelastVisitedPage,
+    validateArray
 }
