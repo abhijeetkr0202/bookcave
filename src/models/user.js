@@ -2,9 +2,8 @@ const mongodb = require('mongodb');
 let db = require('../app');
 
 
-function userSchemaValidator(){
-    console.log("userSchema validation is here")
-    db.createCollection("logincred",{
+exports.userSchemaValidator = function (){
+    db.getDb().createCollection("logincred",{
         validator: {
             $jsonSchema: {
                 bsonType:"object",
@@ -27,5 +26,3 @@ function userSchemaValidator(){
         }
     })
 }
-
-exports.module=userSchemaValidator;

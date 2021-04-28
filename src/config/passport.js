@@ -19,8 +19,8 @@ const strategy = new Strategy(options, (payload, done) => {
     logincredcollection = db.getDb().collection("logincred");
     let o_id = new mongo.ObjectID(payload._id);
 
-    logincredcollection.findOne({ _id: o_id }, (err, user) => {
-        if (err) return done(err, false);
+    logincredcollection.findOne({ _id: o_id })
+    .then((user)=>{
         if (user) {
             return done(null, {
                 useremail: user.useremail,
@@ -28,7 +28,11 @@ const strategy = new Strategy(options, (payload, done) => {
             });
         }
         return done(null, false);
-    });
+    }).catch((err)=>{
+        return done(err, false);
+    })
+        
+
 });
 
 
@@ -53,7 +57,7 @@ exports.issueJWT = function issueJWT(data) {
     let currDate=Date.now()/1000;
     let jwtpayload = { _id: data._id, iat: currDate };
     let token = jwt.sign(jwtpayload, config.passport.secret, {
-        expiresIn: config.passport.expiresIn,
+        expiresIn: config.passport.EXPIRES_IN,
     });
 
     let responseJWT = {"data":{
@@ -81,6 +85,6 @@ exports.parseDatafromToken = function parseDatafromToken(headerData) {
 
 
 
-exports.applyPassportStrategy = passport => {
+exports.applyPassportStrategy = function(passport){
     passport.use(strategy);
 };

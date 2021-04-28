@@ -1,5 +1,5 @@
 let express = require("express");
-const app = express();
+const app = express(".");
 let userRouter = require("./user");
 let bookRouter = require("./book");
 

@@ -7,25 +7,18 @@ const apiResponse = require('../../helpers/apiResponse');
 let db = require("../../../app")
 const passportFunctions = require("../../../config/passport");
 const bookValidator = require("../../middlewares/validator");
-const { func } = require("joi");
+
 
 
 
 
 let userCollection = "logincred";
-let collectionName= "books";
+let bookCollection= "books";
 
 
-/**
- * @description Functions that inserts book data in database
- * @param {object} dbObject 
- * @returns object with book data
- */
-function insertBookData (dbObject){
-    let collection = dbObject.db.collection(dbObject.collectionName);
-    collection.insertOne(dbObject.data);
-    return dbObject.data;
-};
+
+
+
 
 /**
  * 
@@ -43,19 +36,19 @@ function addbookFunc(req,res){
         else
         {
             let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-            req.body.lastVisitedOn = Date.now().toString()
+            req.body.lastvisitedon = Date.now().toString()
             let bookData = {
                 "booktitle": req.body.booktitle,
                 "bookfilepath":"somefuncreturningPath",
-                "lastVisitedPage":req.body.lastVisitedPage,
+                "lastvisitedpage":0,
                 "markedpages":[],
                 "user_id":uid,
                 "uploadedOn": Date.now().toString(),
-                "lastVisitedOn": req.body.lastVisitedOn
+                "lastvisitedon": Date.now().toString()
             }
             let dataObject = {
                 db: db.getDb(),
-                collectionName: collectionName,
+                collectionName: bookCollection,
                 data: bookData
             }
             let insertData = new Promise(function (resolve, reject) {
@@ -74,19 +67,20 @@ function addbookFunc(req,res){
 
 
 /**
- * @description return array of books from db using user id
- * @param {object} dbobj 
- * @param {mongo.ObjectID} id 
- * @returns 
+ * @description Functions that inserts book data in database
+ * @param {object} dbObject 
+ * @returns object with book data
  */
-function findAllbooks(dbobj,id)
-{
-    return new Promise((resolve,reject)=>{
-        // let resArr = dbobj.collection(collectionName).aggregate({"user_id":id},{"$project":{"user_id":0,"markedpages":0,"lastVisitedPage":0}}).toArray();
-        let resArr = dbobj.collection(collectionName).find({"user_id":id}).toArray();
-        resolve(resArr);
-    });
-}
+ function insertBookData (dbObject){
+    let collection = dbObject.db.collection(dbObject.collectionName);
+    collection.insertOne(dbObject.data);
+    return dbObject.data;
+};
+
+
+
+
+
 
 
 /**
@@ -101,7 +95,7 @@ function listbookFunc(req,res){
     then((resArr)=>{
         resArr.forEach(book => {
             delete book.user_id;
-            delete book.lastVisitedPage;
+            delete book.lastvisitedpage;
             delete book.markedpages;
         });
         return apiResponse.successResponseWithData(res,"Successful",resArr)
@@ -111,17 +105,25 @@ function listbookFunc(req,res){
 }
 
 
+
+
 /**
- * @description deletes from database
- * @param {object} paramObj 
+ * @description return array of books from db using user id
+ * @param {object} dbobj 
+ * @param {mongo.ObjectID} id 
  * @returns 
  */
-function deletebook(paramObj) {
-    return new Promise((resolve,reject)=>{
-        let collection = paramObj.db.collection(paramObj.collectionName);
-    resolve(collection.deleteOne(paramObj.query));
-    })
-}
+ function findAllbooks(dbobj,id)
+ {
+     return new Promise((resolve,reject)=>{
+         let resArr = dbobj.collection(bookCollection).find({"user_id":id},{"user_id":0,"markedpages":0,"lastvisitedpage":0}).toArray();
+         resolve(resArr);
+     });
+ }
+
+
+
+
 
 /**
  * @description calls deletefunction for specific documents
@@ -133,7 +135,7 @@ function deleteFunc(req,res) {
     let bid = new mongo.ObjectID(req.params.bid);
     let paramObj={
         db:db.getDb(),
-        collectionName:collectionName,
+        collectionName:bookCollection,
         query:{"_id":bid,"user_id":uid}
     }
     deletebook(paramObj).then(()=>{
@@ -147,17 +149,23 @@ function deleteFunc(req,res) {
 
 
 
+
 /**
- * @description fetch meaning of word using word passed and language from Google API
- * @param {string} word 
- * @param {string} lang 
- * @returns Promise with object having meanings of word
+ * @description deletes from database
+ * @param {object} paramObj 
+ * @returns 
  */
-function fetchMeaning(word,lang){
-
-	return fetch("https://api.dictionaryapi.dev/api/v2/entries/"+lang+"/"+word);
-
+ function deletebook(paramObj) {
+    return new Promise((resolve,reject)=>{
+        let collection = paramObj.db.collection(paramObj.collectionName);
+    resolve(collection.deleteOne(paramObj.query));
+    })
 }
+
+
+
+
+
 
 
 
@@ -170,7 +178,6 @@ function getMeaningFunc(req,res)
 {
     let word = req.params.word;
     let lang = req.params.lang;
-    console.log("hello");
     fetchMeaning(word,lang)
     .then(res => res.json())
     .catch((error)=>{
@@ -199,18 +206,28 @@ function getMeaningFunc(req,res)
     });
 }
 
+
+
+
+
+
+
 /**
- * @description Returns array of recent books
- * @param {object} dbobj 
- * @returns 
+ * @description fetch meaning of word using word passed and language from Google API
+ * @param {string} word 
+ * @param {string} lang 
+ * @returns Promise with object having meanings of word
  */
-function findRecentbooks(dbobj)
-{
-    return new Promise((resolve,reject)=>{
-        let resArr = dbobj.db.collection(dbobj.collectionName).aggregate({"user_id":dbobj.id}).sort({"lastVisitedOn":-1}).limit(2).toArray();
-        resolve(resArr);
-    });
+ function fetchMeaning(word,lang){
+
+	return fetch("https://api.dictionaryapi.dev/api/v2/entries/"+lang+"/"+word);
+
 }
+
+
+
+
+
 
 /**
  * @description Return API resonpnse data containing details of recently opened books
@@ -221,14 +238,14 @@ function  getRecentFunc(req,res) {
     let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
     let dbobj={
         db:db.getDb(),
-        collectionName:collectionName,
+        collectionName:bookCollection,
         id:uid
     }
-    findRecentbooks(dbobj).
-    then((resArr)=>{
+    findRecentbooks(dbobj)
+    .then((resArr)=>{
         resArr.forEach(book => {
             delete book.user_id;
-            delete book.lastVisitedPage;
+            delete book.lastvisitedpage;
             delete book.markedpages;
         });
         return apiResponse.successResponseWithData(res,"Successful",resArr)
@@ -239,16 +256,22 @@ function  getRecentFunc(req,res) {
 }
 
 
+
+
 /**
- * @description Updates data of book collection
- * @param {object} paramobj 
- * @returns Promise
+ * @description Returns array of recent books
+ * @param {object} dbobj 
+ * @returns 
  */
-function updateBookdata(dbobj,query,newvalues) {
-    return new Promise((resolve, reject) => {
-        resolve(dbobj.updateOne(query, newvalues));
-    })
-}
+ function findRecentbooks(dbobj)
+ {
+     return new Promise((resolve,reject)=>{
+         let resArr = dbobj.db.collection(dbobj.collectionName).find({"user_id":dbobj.id},{"user_id":0,"markedpages":0,"lastvisitedpage":0}).sort({"lastvisitedon":-1}).limit(2).toArray();
+         resolve(resArr);
+     });
+ }
+
+
 
 
 
@@ -271,7 +294,7 @@ function updateMarkedPagesFunc(req,res)
              markedpages: req.body.markedpages
          }
          let newvalues = { $set: newData };
-         let bookcollection = db.getDb().collection(collectionName);
+         let bookcollection = db.getDb().collection(bookCollection);
          let query={_id:bid,user_id:uid};
      
      
@@ -286,11 +309,23 @@ function updateMarkedPagesFunc(req,res)
 
 
 
+/**
+ * @description Updates data of book collection
+ * @param {object} paramobj 
+ * @returns Promise
+ */
+ function updateBookdata(dbobj,query,newvalues) {
+    return new Promise((resolve, reject) => {
+        resolve(dbobj.updateOne(query, newvalues));
+    })
+}
+
+
 // Arrays to be exported to route functions
 let bookUploadFunction = [
     bookValidator.validateBooktitle,
-    bookValidator.validatelastVisitedPage,
-    bookValidator.validatelastVisitedOn,
+    bookValidator.validatelastvisitedpage,
+    bookValidator.validatelastvisitedon,
     addbookFunc
 ];
 

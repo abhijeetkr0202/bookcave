@@ -1,20 +1,29 @@
 const passport = require("passport");
 const router = require(".");
-const usercontroller = require("../controller/usercontroller");
 
 
 
-router.post('/signup', usercontroller.signupFunctions);
 
-router.post('/signin', usercontroller.siginFunctions);
+const signupCall = require("./user/signupUser").signupRequest();
+const signinCall = require("./user/signinUser").signinRequest();
+const profileCall = require("./user/profileUser");
 
-// router.post('/signout',usercontroller.signout);
 
-router.get('/profile', passport.authenticate('jwt', { session: false }), usercontroller.getprofile);
 
-router.put('/profile', passport.authenticate('jwt', { session: false }), usercontroller.editprofile);
 
-router.delete('/profile', passport.authenticate('jwt', { session: false }), usercontroller.deleteprofile);//also delete books for that users
+const AUTH_MIDDLEWHERE = passport.authenticate('jwt', { session: false });
+
+
+
+router.post('/signup', signupCall);
+
+router.post('/signin', signinCall);
+
+router.get('/profile', AUTH_MIDDLEWHERE, profileCall.getProfileRequest());
+
+router.put('/profile', AUTH_MIDDLEWHERE, profileCall.editProfileRequest());
+
+router.delete('/profile', AUTH_MIDDLEWHERE, profileCall.deleteProfileRequest());
 
 
 

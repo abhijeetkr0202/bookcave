@@ -10,7 +10,8 @@ const http = require('http');
 const mongoURL = require('./config').mongoURL;
 const apiRouterV1 = require('./api/v1/routes/api');
 const { applyPassportStrategy } = require('./config/passport');
-
+const userSchemaValidator = require('./models/user').userSchemaValidator;
+const bookSchemaValidator = require('./models/book').bookSchemaValidator;
 const port = require('./config').port;
 
 
@@ -38,15 +39,20 @@ function initServer(MONGODB_URL) {
         console.log("Connnected to Database");
         mongoClient = client;
         dbObj = client.db('bookcaveDB');
+        
+        // userSchemaValidator();
+        // bookSchemaValidator();
+        return Promise.resolve(dbObj);
     }).catch((error)=>{
         console.error(error);
-    }).then(()=>{
+    })
+    .then(()=>{
         const server = http.createServer(app);
         return Promise.resolve(server.listen(port));
     }).catch((error)=>{
         console.error(error);
     }).then(()=>{
-        console.log("SERVER STARTED AR PORT NUMBER "+port);
+        console.log("SERVER STARTED ON PORT NUMBER "+port);
             applyPassportStrategy(passport);
             app.use(express.json());
             app.use(express.urlencoded({ extended: false }));

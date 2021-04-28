@@ -25,9 +25,9 @@ let isDuplicateUser = body('useremail').custom((value) => {
 
 let validateBooktitle = body('booktitle').isLength({ min:1 }).trim().withMessage("Book title is required").withMessage("Book title must be a string")
 
-let validatelastVisitedPage = check('lastVisitedPage').isNumeric().withMessage("Integers required");
+let validatelastvisitedpage = check('lastvisitedpage');
 
-let validatelastVisitedOn = body('lastVisitedOn').trim().isString().withMessage("Integer required");
+let validatelastvisitedon = body('lastvisitedon').trim().isInt().withMessage("Integer required");
 
 let validateArray = body('markedpages').isArray().withMessage("Array input required")
 
@@ -42,7 +42,7 @@ module.exports = {
     isDuplicateUser,
 
     validateBooktitle,
-    validatelastVisitedOn,
-    validatelastVisitedPage,
+    validatelastvisitedon,
+    validatelastvisitedpage,
     validateArray
 }
