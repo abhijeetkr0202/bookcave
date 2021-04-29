@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const fs = require('fs');
 
 const ACCESS_KEY_ID = require('../../../config/index').S3_ID;
 const SECRET_KEY = require('../../../config/index').S3_SECRET;
@@ -14,7 +13,7 @@ const s3 = new AWS.S3({
 
 exports.uploadFile = function (file){
         const params = {
-            Bucket: 'bookdata001', 
+            Bucket: BUCKET_NAME, 
             Key: file.name+".pdf", 
             Body: file.data
         };
