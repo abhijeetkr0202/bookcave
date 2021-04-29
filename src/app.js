@@ -4,8 +4,8 @@ const MongoClient = require('mongodb').MongoClient;
 const app = express();
 const passport = require('passport');
 const http = require('http');
-
-
+const fileUpload = require('express-fileupload');
+const cors = require('cors');
 
 const mongoURL = require('./config').mongoURL;
 const apiRouterV1 = require('./api/v1/routes/api');
@@ -54,14 +54,17 @@ function initServer(MONGODB_URL) {
     }).then(()=>{
         console.log("SERVER STARTED ON PORT NUMBER "+port);
             applyPassportStrategy(passport);
+            
+            app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
             app.use(express.json());
             app.use(express.urlencoded({ extended: false }));
             app.use('/v1',apiRouterV1);
-            process.on('exit', shutdown);
-            process.on('SIGINT', shutdown);
-            process.on('SIGTERM', shutdown);
-            process.on('SIGKILL', shutdown);
-            process.on('uncaughtException', shutdown);
+            app.use(cors());
+            // process.on('exit', shutdown);
+            // process.on('SIGINT', shutdown);
+            // process.on('SIGTERM', shutdown);
+            // process.on('SIGKILL', shutdown);
+            // process.on('uncaughtException', shutdown);
     }).catch((error)=>{
         console.error(error);
     });

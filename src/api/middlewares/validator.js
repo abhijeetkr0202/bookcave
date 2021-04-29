@@ -27,7 +27,7 @@ let validateBooktitle = body('booktitle').isLength({ min:1 }).trim().withMessage
 
 let validatelastvisitedpage = check('lastvisitedpage');
 
-let validatelastvisitedon = body('lastvisitedon').trim().isInt().withMessage("Integer required");
+let validatelastvisitedon = body('lastvisitedon').isNumeric().trim().withMessage("Integer required");
 
 let validateArray = body('markedpages').isArray().withMessage("Array input required")
 
