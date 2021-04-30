@@ -20,3 +20,16 @@ exports.uploadFile = function (file){
        return s3.upload(params).promise();
 };
 
+
+// exports.deleteFile = function (file){
+//     const params = {
+//         Bucket: BUCKET_NAME, 
+//         Key: file.name, 
+//         Body: file.data
+//     };
+//     const params = {
+//         Bucket: BUCKET_NAME, 
+//         Key: file.name+".pdf", 
+//         Body: file.data
+//     };
+// }

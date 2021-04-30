@@ -34,16 +34,14 @@ function addbookFunc(req, res) {
         return apiResponse.validationErrorWithData(res, "Validation Error or missing file", errors.array());
 
     }
-
-        req.files.bookfile.name = req.body.booktitle;
+        
         let bookfile = req.files.bookfile;
-
         awsUploader(bookfile)
             .then((awsdata) => {
 
                 let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
                 let bookData = {
-                    "booktitle": req.body.booktitle,
+                    "booktitle": bookfile.name,
                     "bookfilepath": awsdata.Location,
                     "lastvisitedpage": 0,
                     "markedpages": [],
@@ -323,7 +321,7 @@ function updateBookdata(dbobj, query, newvalues) {
 
 // Arrays to be exported to route functions
 let bookUploadFunction = [
-    bookValidator.validateBooktitle,
+    bookValidator.validateFile,
     addbookFunc
 ];
 
