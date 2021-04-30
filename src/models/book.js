@@ -13,6 +13,10 @@ exports.bookSchemaValidator = function (){
                         bsonType:"string",
                         description:"String allowed and is required"
                     },
+                    bookfilename:{
+                        bsonType:"string",
+                        description:"String allowed"
+                    },
                     bookfilepath:{
                         bsonType:"string",
                         description:"String allowed and is required"

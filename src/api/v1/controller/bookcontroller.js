@@ -154,19 +154,19 @@ function deleteFunc(req, res) {
         })
         .then(function (filepathvalue) {
             awsDelete(filepathvalue)
-            .then(function () {
-                return Promise.resolve(deletebook(paramObj));
-            })
-            .catch((error) => {
-                return apiResponse.ErrorResponse(res, "deletebook k baad waala");
-            })
-            .then(function () {
-                return apiResponse.successResponse(res, "Deleted");
-            })
+                .then(function () {
+                    return Promise.resolve(deletebook(paramObj));
+                })
+                .catch((error) => {
+                    return apiResponse.ErrorResponse(res, "deletebook k baad waala");
+                })
+                .then(function () {
+                    return apiResponse.successResponse(res, "Deleted");
+                })
         }).catch(function (err) {
-            return apiResponse.notFoundResponse(res,"Not found");            
+            return apiResponse.notFoundResponse(res, "Not found");
         })
-        
+
 
 
 
@@ -341,6 +341,38 @@ function updateMarkedPagesFunc(req, res) {
 
 
 
+
+/**
+ * @description Renames booktitle in database recieved from request 
+ * @param {object} req 
+ * @param {object} res 
+ */
+function updateBooktitleFunc(req, res) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
+    }
+    else {
+        let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        let bid = new mongo.ObjectID(req.params.bid);
+        let newData = {
+            booktitle: req.body.booktitle
+        }
+        let newvalues = { $set: newData };
+        let bookcollection = db.getDb().collection(bookCollection);
+        let query = { _id: bid, user_id: uid };
+
+
+        updateBookdata(bookcollection, query, newvalues)
+            .then(function (Info) {
+                return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
+            }).catch((error) => {
+                return apiResponse.notFoundResponse(res, error);
+            });
+    }
+}
+
+
 /**
  * @description Updates data of book collection
  * @param {object} paramobj 
@@ -380,6 +412,10 @@ let MarkedPagesFunction = [
     updateMarkedPagesFunc
 ]
 
+let RenameBookFunction = [
+    bookValidator.validateBooktitle,
+    updateBooktitleFunc
+]
 module.exports = {
 
     bookUploadFunction,
@@ -387,5 +423,6 @@ module.exports = {
     deleteBookFunction,
     dictionaryFunction,
     RecentBookFunction,
-    MarkedPagesFunction
+    MarkedPagesFunction,
+    RenameBookFunction
 }

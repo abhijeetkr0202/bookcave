@@ -20,18 +20,18 @@ const strategy = new Strategy(options, (payload, done) => {
     let o_id = new mongo.ObjectID(payload._id);
 
     logincredcollection.findOne({ _id: o_id })
-    .then((user)=>{
-        if (user) {
-            return done(null, {
-                useremail: user.useremail,
-                _id: user._id
-            });
-        }
-        return done(null, false);
-    }).catch((err)=>{
-        return done(err, false);
-    })
-        
+        .then((user) => {
+            if (user) {
+                return done(null, {
+                    useremail: user.useremail,
+                    _id: user._id
+                });
+            }
+            return done(null, false);
+        }).catch((err) => {
+            return done(err, false);
+        })
+
 
 });
 
@@ -54,16 +54,18 @@ const strategy = new Strategy(options, (payload, done) => {
  * @returns Response to API request with user info and TOKEN
  */
 exports.issueJWT = function issueJWT(data) {
-    let currDate=Date.now()/1000;
+    let currDate = Date.now() / 1000;
     let jwtpayload = { _id: data._id, iat: currDate };
     let token = jwt.sign(jwtpayload, config.passport.secret, {
         expiresIn: config.passport.EXPIRES_IN,
     });
 
-    let responseJWT = {"data":{
-        username:data.username,
-        useremail:data.useremail
-    } };
+    let responseJWT = {
+        "data": {
+            username: data.username,
+            useremail: data.useremail
+        }
+    };
     responseJWT.data.token = token;
     responseJWT.data.token_type = "Bearer";
 
@@ -85,6 +87,6 @@ exports.parseDatafromToken = function parseDatafromToken(headerData) {
 
 
 
-exports.applyPassportStrategy = function(passport){
+exports.applyPassportStrategy = function (passport) {
     passport.use(strategy);
 };

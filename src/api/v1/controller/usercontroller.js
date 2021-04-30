@@ -36,32 +36,32 @@ function signupFunc(req, res) {
     if (!errors.isEmpty()) {
         return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
     }
-        bcrypt.hash(req.body.password, 10).then(function(hash) {
-            let signUpData = {
-                "username": req.body.username,
-                "useremail": req.body.useremail,
-                "password": hash
-            }
-            return Promise.resolve(signUpData);
-        }).catch((error) => {
+    bcrypt.hash(req.body.password, 10).then(function (hash) {
+        let signUpData = {
+            "username": req.body.username,
+            "useremail": req.body.useremail,
+            "password": hash
+        }
+        return Promise.resolve(signUpData);
+    }).catch((error) => {
 
-            return apiResponse.ErrorResponse(res, error)
-        }).then(function(signUpData) {
-            let dataObject = {
-                db: db.getDb(),
-                collectionName: userCollection,
-                data: signUpData
-            }
-            return Promise.resolve(insertSignupData(dataObject));
-        }).catch((error) => {
-            return apiResponse.ErrorResponse(res, error)
-        }).then(function(jwtData){
-            return Promise.resolve(passportFunctions.issueJWT(jwtData));
-        }).catch((error) => {
-            return apiResponse.ErrorResponse(res, error)
-        }).then(function(responseData) {
-            return apiResponse.successResponseWithToken(res, responseData);
-        });
+        return apiResponse.ErrorResponse(res, error)
+    }).then(function (signUpData) {
+        let dataObject = {
+            db: db.getDb(),
+            collectionName: userCollection,
+            data: signUpData
+        }
+        return Promise.resolve(insertSignupData(dataObject));
+    }).catch((error) => {
+        return apiResponse.ErrorResponse(res, error)
+    }).then(function (jwtData) {
+        return Promise.resolve(passportFunctions.issueJWT(jwtData));
+    }).catch((error) => {
+        return apiResponse.ErrorResponse(res, error)
+    }).then(function (responseData) {
+        return apiResponse.successResponseWithToken(res, responseData);
+    });
 };
 
 
@@ -73,7 +73,7 @@ function signupFunc(req, res) {
  * @param {object} dbObject 
  * @returns data object
  */
- function insertSignupData(dbObject) {
+function insertSignupData(dbObject) {
     dbObject.db.collection(dbObject.collectionName).insertOne(dbObject.data);
     return dbObject.data;
 
@@ -95,29 +95,29 @@ function signinFunc(req, res) {
     if (!errors.isEmpty()) {
         return apiResponse.validationErrorWithData(res, "validation Error", errors.array());
     }
-        let paramobj = {
-            query: { useremail: req.body.useremail },
-            db: db.getDb(),
-            collectionName: userCollection,
+    let paramobj = {
+        query: { useremail: req.body.useremail },
+        db: db.getDb(),
+        collectionName: userCollection,
 
+    }
+    findUser(paramobj).then(function (data) {
+        if (data) {
+
+            bcrypt.compare(req.body.password, data.password)
+                .then(function (same) {
+                    if (same) {
+                        return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
+                    }
+                    return apiResponse.unauthorizedResponse(res, "Wrong password");
+                })
         }
-        findUser(paramobj).then(function(data) {
-            if (data) {
-
-                bcrypt.compare(req.body.password, data.password)
-                    .then(function(same) {
-                        if (same) {
-                            return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
-                        }
-                        return apiResponse.unauthorizedResponse(res, "Wrong password");
-                    })
-            }
-            else {
-                return apiResponse.unauthorizedResponse(res, "Wrong Credentials")
-            }
-        }).catch((error) => {
-            return apiResponse.ErrorResponse(res, error);
-        });
+        else {
+            return apiResponse.unauthorizedResponse(res, "Wrong Credentials")
+        }
+    }).catch((error) => {
+        return apiResponse.ErrorResponse(res, error);
+    });
 };
 
 /**
@@ -126,7 +126,7 @@ function signinFunc(req, res) {
  * @param {Object} paramObj
  * @returns Promise , resolved(userdata)
  */
- function findUser(paramObj) {
+function findUser(paramObj) {
     return new Promise((resolve, reject) => {
         resolve(paramObj.db.collection(paramObj.collectionName).findOne(paramObj.query));
     })
@@ -152,7 +152,7 @@ function getprofile(req, res) {
         db: db.getDb()
     }
     findUser(paramObj)
-        .then(function(userInfo) {
+        .then(function (userInfo) {
             delete userInfo.password;
             delete userInfo._id;
             return apiResponse.successResponseWithData(res, "Success", userInfo);
@@ -172,7 +172,7 @@ function getprofile(req, res) {
  */
 function editprofile(req, res) {
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-    
+
     let newData = {
         username: req.body.username
     }
@@ -181,7 +181,7 @@ function editprofile(req, res) {
     let query = { _id: o_id };
     let logincredcollection = db.getDb().collection(userCollection);
     updateUser(logincredcollection, query, newvalues)
-        .then(function(userInfo) {
+        .then(function (userInfo) {
             return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
         }).catch((error) => {
             return apiResponse.notFoundResponse(res, "user not find");
@@ -197,7 +197,7 @@ function editprofile(req, res) {
  * @param {object} updatedData 
  * @returns 
  */
- function updateUser(dbobj, query, newValues) {
+function updateUser(dbobj, query, newValues) {
     return new Promise((resolve, reject) => {
         resolve(dbobj.updateOne(query, newValues));
     })
@@ -219,17 +219,17 @@ function editprofile(req, res) {
 function deleteprofile(req, res) {
 
     let o_id = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-    let obj={
-        query:{ _id: o_id },
-        userdb:db.getDb().collection(userCollection)
+    let obj = {
+        query: { _id: o_id },
+        userdb: db.getDb().collection(userCollection)
     }
     let bObj = {
-        query:{"user_id":o_id},
-        bookdb:db.getDb().collection(bookCollection)
+        query: { "user_id": o_id },
+        bookdb: db.getDb().collection(bookCollection)
     }
-    
-    Promise.all([deleteUserData(obj),deleteUsersBookData(bObj)])
-    .then(function() {
+
+    Promise.all([deleteUserData(obj), deleteUsersBookData(bObj)])
+        .then(function () {
             return apiResponse.ModificationResponseWithData(res, "Deleted");
         }).catch((error) => {
             return apiResponse.notFoundResponse(res, "user not find");
@@ -244,7 +244,7 @@ function deleteprofile(req, res) {
  * @param {object} query 
  * @returns Promise to be resolved
  */
- function deleteUserData(obj) {
+function deleteUserData(obj) {
     return new Promise((resolve, reject) => {
         resolve(obj.userdb.deleteOne(obj.query));
     })
@@ -256,9 +256,9 @@ function deleteprofile(req, res) {
  * @param {object} Obj 
  * @returns 
  */
- function deleteUsersBookData(Obj) {
-    return new Promise((resolve,reject)=>{
-    resolve(Obj.bookdb.deleteMany(Obj.query));
+function deleteUsersBookData(Obj) {
+    return new Promise((resolve, reject) => {
+        resolve(Obj.bookdb.deleteMany(Obj.query));
     })
 }
 

@@ -6,25 +6,25 @@ const BUCKET_NAME = require('../../../config/index').BUCKET_NAME;
 
 
 const s3 = new AWS.S3({
-    accessKeyId:ACCESS_KEY_ID,
-    secretAccessKey:SECRET_KEY
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_KEY
 });
 
 
-exports.uploadFile = function (file,uid){
-        let filepath=uid+"/"+file.name;
-        const params = {
-            Bucket: BUCKET_NAME, 
-            Key: filepath, 
-            Body: file.data
-        };
-       return s3.upload(params).promise();
+exports.uploadFile = function (file, uid) {
+    let filepath = uid + "/" + file.name;
+    const params = {
+        Bucket: BUCKET_NAME,
+        Key: filepath,
+        Body: file.data
+    };
+    return s3.upload(params).promise();
 };
 
 
-exports.deleteFile = function (filename){
+exports.deleteFile = function (filename) {
     const params = {
-        Bucket: BUCKET_NAME, 
+        Bucket: BUCKET_NAME,
         Key: filename
     };
     return s3.deleteObject(params).promise();
