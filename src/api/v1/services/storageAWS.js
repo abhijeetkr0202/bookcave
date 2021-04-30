@@ -22,11 +22,10 @@ exports.uploadFile = function (file,uid){
 };
 
 
-exports.deleteFile = function (file){
+exports.deleteFile = function (filename){
     const params = {
         Bucket: BUCKET_NAME, 
-        Key: file.name, 
-        Body: file.data
+        Key: filename
     };
     return s3.deleteObject(params).promise();
-}
+};

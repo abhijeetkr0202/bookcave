@@ -9,7 +9,7 @@ const passportFunctions = require("../../../config/passport");
 const bookValidator = require("../../middlewares/validator");
 
 const awsUpload = require("../services/storageAWS").uploadFile;
-const awsDelete = require("../services/storageAWS");
+const awsDelete = require("../services/storageAWS").deleteFile;
 
 
 
@@ -35,38 +35,41 @@ function addbookFunc(req, res) {
         return apiResponse.validationErrorWithData(res, "Validation Error or missing file", errors.array());
 
     }
-        
-        let bookfile = req.files.bookfile;
-        let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-        awsUpload(bookfile,uid).catch(function(error){
-            console.error(error);
+
+    let bookfile = req.files.bookfile;
+    let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    awsUpload(bookfile, uid).catch(function (error) {
+        console.error(error);
+    })
+        .then((awsdata) => {
+            if (typeof req.body.booktitle === 'undefined') {
+                req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF)/, '');
+            }
+            let bookData = {
+                "booktitle": req.body.booktitle,
+                "bookfilepath": awsdata.Location,
+                "bookfilename": bookfile.name,
+                "lastvisitedpage": 0,
+                "markedpages": [],
+                "user_id": uid,
+                "uploadedOn": Date.now(),
+                "lastvisitedon": Date.now()
+            }
+            let dataObject = {
+                db: db.getDb(),
+                collectionName: bookCollection,
+                data: bookData
+            }
+
+            return Promise.resolve(insertBookData(dataObject));
         })
-            .then((awsdata) => {
+        .then(function (data) {
+            return apiResponse.successResponse(res, "Uploaded");
+        }).catch((error) => {
+            return apiResponse.ErrorResponse(res, error);
+        });
 
-                let bookData = {
-                    "booktitle": bookfile.name,
-                    "bookfilepath": awsdata.Location,
-                    "lastvisitedpage": 0,
-                    "markedpages": [],
-                    "user_id": uid,
-                    "uploadedOn": Date.now(),
-                    "lastvisitedon": Date.now()
-                }
-                let dataObject = {
-                    db: db.getDb(),
-                    collectionName: bookCollection,
-                    data: bookData
-                }
 
-                return Promise.resolve(insertBookData(dataObject));
-            })
-            .then(function (data){
-                return apiResponse.successResponse(res, "Uploaded");
-            }).catch((error) => {
-                return apiResponse.ErrorResponse(res, error);
-            });
-
-    
 }
 
 
@@ -144,20 +147,43 @@ function deleteFunc(req, res) {
         query: { "_id": bid, "user_id": uid }
     }
 
-    checkAWSfileRemoval()
-    .catch(function(error) {
-        return apiResponse.ErrorResponse(res,"Failed");
-    })
-    .then(function(){ return deletebook(paramObj).promise()}).then(function () {
-        return apiResponse.successResponse(res, "Deleted");
-    })
-        .catch((error) => {
-            return apiResponse.ErrorResponse(res, error);
-        });
+    getFilePath(paramObj)
+        .then(function (data) {
+            let filepath = paramObj.query.user_id + "/" + data[0].bookfilename;
+            return Promise.resolve(filepath);
+        })
+        .then(function (filepathvalue) {
+            awsDelete(filepathvalue)
+            .then(function () {
+                return Promise.resolve(deletebook(paramObj));
+            })
+            .catch((error) => {
+                return apiResponse.ErrorResponse(res, "deletebook k baad waala");
+            })
+            .then(function () {
+                return apiResponse.successResponse(res, "Deleted");
+            })
+        }).catch(function (err) {
+            return apiResponse.notFoundResponse(res,"Not found");            
+        })
+        
+
+
+
+
 
 }
 
 
+/**
+ * @description returns array 
+ * @param {object} paramobj 
+ * @returns Promise with data
+ */
+function getFilePath(paramobj) {
+    let filepath = paramobj.db.collection(paramobj.collectionName).find(paramobj.query).toArray();
+    return Promise.resolve(filepath);
+}
 
 
 /**
@@ -188,11 +214,11 @@ function getMeaningFunc(req, res) {
     let word = req.params.word;
     let lang = req.params.lang;
     fetchMeaning(word, lang)
-        .then(res=>res.json())
+        .then(res => res.json())
         .catch((error) => {
-            return apiResponse.ErrorResponse(res,error);
+            return apiResponse.ErrorResponse(res, error);
         })
-        .then(function(json) {
+        .then(function (json) {
             let status = "Successful";
             if (json.title == "No Definitions Found") {
                 status = json.title
@@ -251,7 +277,7 @@ function getRecentFunc(req, res) {
         id: uid
     }
     findRecentbooks(dbobj)
-        .then(function(resArr){
+        .then(function (resArr) {
             resArr.forEach(book => {
                 delete book.user_id;
                 delete book.lastvisitedpage;
@@ -305,7 +331,7 @@ function updateMarkedPagesFunc(req, res) {
 
 
         updateBookdata(bookcollection, query, newvalues)
-            .then(function(Info) {
+            .then(function (Info) {
                 return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
             }).catch((error) => {
                 return apiResponse.notFoundResponse(res, error);
