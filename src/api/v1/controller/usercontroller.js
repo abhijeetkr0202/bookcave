@@ -36,7 +36,7 @@ function signupFunc(req, res) {
     if (!errors.isEmpty()) {
         return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
     }
-        bcrypt.hash(req.body.password, 10).then((hash) => {
+        bcrypt.hash(req.body.password, 10).then(function(hash) {
             let signUpData = {
                 "username": req.body.username,
                 "useremail": req.body.useremail,
@@ -46,7 +46,7 @@ function signupFunc(req, res) {
         }).catch((error) => {
 
             return apiResponse.ErrorResponse(res, error)
-        }).then((signUpData) => {
+        }).then(function(signUpData) {
             let dataObject = {
                 db: db.getDb(),
                 collectionName: userCollection,
@@ -55,11 +55,11 @@ function signupFunc(req, res) {
             return Promise.resolve(insertSignupData(dataObject));
         }).catch((error) => {
             return apiResponse.ErrorResponse(res, error)
-        }).then((jwtData) => {
+        }).then(function(jwtData){
             return Promise.resolve(passportFunctions.issueJWT(jwtData));
         }).catch((error) => {
             return apiResponse.ErrorResponse(res, error)
-        }).then((responseData) => {
+        }).then(function(responseData) {
             return apiResponse.successResponseWithToken(res, responseData);
         });
 };
@@ -101,11 +101,11 @@ function signinFunc(req, res) {
             collectionName: userCollection,
 
         }
-        findUser(paramobj).then(data => {
+        findUser(paramobj).then(function(data) {
             if (data) {
 
                 bcrypt.compare(req.body.password, data.password)
-                    .then((same) => {
+                    .then(function(same) {
                         if (same) {
                             return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
                         }
@@ -152,7 +152,7 @@ function getprofile(req, res) {
         db: db.getDb()
     }
     findUser(paramObj)
-        .then((userInfo) => {
+        .then(function(userInfo) {
             delete userInfo.password;
             delete userInfo._id;
             return apiResponse.successResponseWithData(res, "Success", userInfo);
@@ -181,7 +181,7 @@ function editprofile(req, res) {
     let query = { _id: o_id };
     let logincredcollection = db.getDb().collection(userCollection);
     updateUser(logincredcollection, query, newvalues)
-        .then((userInfo) => {
+        .then(function(userInfo) {
             return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
         }).catch((error) => {
             return apiResponse.notFoundResponse(res, "user not find");
@@ -227,8 +227,9 @@ function deleteprofile(req, res) {
         query:{"user_id":o_id},
         bookdb:db.getDb().collection(bookCollection)
     }
+    
     Promise.all([deleteUserData(obj),deleteUsersBookData(bObj)])
-    .then(() => {
+    .then(function() {
             return apiResponse.ModificationResponseWithData(res, "Deleted");
         }).catch((error) => {
             return apiResponse.notFoundResponse(res, "user not find");

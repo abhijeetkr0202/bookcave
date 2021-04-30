@@ -7,8 +7,9 @@ const apiResponse = require('../../helpers/apiResponse');
 let db = require("../../../app")
 const passportFunctions = require("../../../config/passport");
 const bookValidator = require("../../middlewares/validator");
-const awsUploader = require("../services/storageAWS").uploadFile;
 
+const awsUpload = require("../services/storageAWS").uploadFile;
+const awsDelete = require("../services/storageAWS");
 
 
 
@@ -36,10 +37,12 @@ function addbookFunc(req, res) {
     }
         
         let bookfile = req.files.bookfile;
-        awsUploader(bookfile)
+        let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        awsUpload(bookfile,uid).catch(function(error){
+            console.error(error);
+        })
             .then((awsdata) => {
 
-                let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
                 let bookData = {
                     "booktitle": bookfile.name,
                     "bookfilepath": awsdata.Location,
@@ -57,7 +60,7 @@ function addbookFunc(req, res) {
 
                 return Promise.resolve(insertBookData(dataObject));
             })
-            .then((data) => {
+            .then(function (data){
                 return apiResponse.successResponse(res, "Uploaded");
             }).catch((error) => {
                 return apiResponse.ErrorResponse(res, error);
@@ -140,7 +143,12 @@ function deleteFunc(req, res) {
         collectionName: bookCollection,
         query: { "_id": bid, "user_id": uid }
     }
-    deletebook(paramObj).then(() => {
+
+    checkAWSfileRemoval()
+    .catch(function(error) {
+        return apiResponse.ErrorResponse(res,"Failed");
+    })
+    .then(function(){ return deletebook(paramObj).promise()}).then(function () {
         return apiResponse.successResponse(res, "Deleted");
     })
         .catch((error) => {
@@ -180,11 +188,11 @@ function getMeaningFunc(req, res) {
     let word = req.params.word;
     let lang = req.params.lang;
     fetchMeaning(word, lang)
-        .then(res => res.json())
+        .then(res=>res.json())
         .catch((error) => {
-            return apiResponse.ErrorResponse
+            return apiResponse.ErrorResponse(res,error);
         })
-        .then(json => {
+        .then(function(json) {
             let status = "Successful";
             if (json.title == "No Definitions Found") {
                 status = json.title
@@ -243,7 +251,7 @@ function getRecentFunc(req, res) {
         id: uid
     }
     findRecentbooks(dbobj)
-        .then((resArr) => {
+        .then(function(resArr){
             resArr.forEach(book => {
                 delete book.user_id;
                 delete book.lastvisitedpage;
@@ -297,7 +305,7 @@ function updateMarkedPagesFunc(req, res) {
 
 
         updateBookdata(bookcollection, query, newvalues)
-            .then((Info) => {
+            .then(function(Info) {
                 return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
             }).catch((error) => {
                 return apiResponse.notFoundResponse(res, error);

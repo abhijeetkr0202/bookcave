@@ -60,11 +60,11 @@ function initServer(MONGODB_URL) {
             app.use(express.urlencoded({ extended: false }));
             app.use('/v1',apiRouterV1);
             app.use(cors());
-            // process.on('exit', shutdown);
-            // process.on('SIGINT', shutdown);
-            // process.on('SIGTERM', shutdown);
-            // process.on('SIGKILL', shutdown);
-            // process.on('uncaughtException', shutdown);
+            process.on('exit', shutdown);
+            process.on('SIGINT', shutdown);
+            process.on('SIGTERM', shutdown);
+            process.on('SIGKILL', shutdown);
+            process.on('uncaughtException', shutdown);
     }).catch((error)=>{
         console.error(error);
     });

@@ -11,25 +11,22 @@ const s3 = new AWS.S3({
 });
 
 
-exports.uploadFile = function (file){
+exports.uploadFile = function (file,uid){
+        let filepath=uid+"/"+file.name;
         const params = {
             Bucket: BUCKET_NAME, 
-            Key: file.name+".pdf", 
+            Key: filepath, 
             Body: file.data
         };
        return s3.upload(params).promise();
 };
 
 
-// exports.deleteFile = function (file){
-//     const params = {
-//         Bucket: BUCKET_NAME, 
-//         Key: file.name, 
-//         Body: file.data
-//     };
-//     const params = {
-//         Bucket: BUCKET_NAME, 
-//         Key: file.name+".pdf", 
-//         Body: file.data
-//     };
-// }
+exports.deleteFile = function (file){
+    const params = {
+        Bucket: BUCKET_NAME, 
+        Key: file.name, 
+        Body: file.data
+    };
+    return s3.deleteObject(params).promise();
+}
