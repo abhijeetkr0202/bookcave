@@ -99,8 +99,13 @@ function insertBookData(dbObject) {
  */
 function listbookFunc(req, res) {
     let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-
-    findAllbooks(db.getDb(), uid).
+    let params={
+        db:db.getDb(),
+        collectionName:bookCollection,
+        query:{ "user_id": uid },
+        hide_data:{ "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }
+    }
+    findAllbooks(params).
         then((resArr) => {
             resArr.forEach(book => {
                 delete book.user_id;
@@ -122,9 +127,9 @@ function listbookFunc(req, res) {
  * @param {mongo.ObjectID} id 
  * @returns 
  */
-function findAllbooks(dbobj, id) {
+function findAllbooks(params) {
     return new Promise((resolve, reject) => {
-        let resArr = dbobj.collection(bookCollection).find({ "user_id": id }, { "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }).toArray();
+        let resArr = params.db.collection(params.collectionName).find(params.query, params.hide_data).toArray();
         resolve(resArr);
     });
 }
@@ -379,9 +384,37 @@ function updateBooktitleFunc(req, res) {
  * @returns Promise
  */
 function updateBookdata(dbobj, query, newvalues) {
-    return new Promise((resolve, reject) => {
+    return new Promise(function (resolve, reject) {
         resolve(dbobj.updateOne(query, newvalues));
-    })
+    });
+}
+
+
+
+
+function retrieveBookFunc(req,res){
+    let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    let bid = new mongo.ObjectID(req.params.bid);
+    let params ={
+        db:db.getDb(),
+        query:{"_id":bid,"user_id":uid},
+        hide_data:{"user_id":0},
+        collectionName:bookCollection
+    };
+    getBookDetail(params)
+            .then(function (bookData) {
+                return apiResponse.successResponseWithData(res,"successful",bookData);
+            }).catch((error) => {
+                return apiResponse.notFoundResponse(res, error);
+            });
+
+}
+
+function getBookDetail(params){
+    return new Promise(function (resolve,reject){
+        let res=params.db.collection(params.collectionName).findOne(params.query,params.hide_data);
+        resolve(res);
+    });
 }
 
 
@@ -416,6 +449,10 @@ let RenameBookFunction = [
     bookValidator.validateBooktitle,
     updateBooktitleFunc
 ]
+
+let RetrieveBookFunction = [
+    retrieveBookFunc
+]
 module.exports = {
 
     bookUploadFunction,
@@ -424,5 +461,6 @@ module.exports = {
     dictionaryFunction,
     RecentBookFunction,
     MarkedPagesFunction,
-    RenameBookFunction
+    RenameBookFunction,
+    RetrieveBookFunction
 }

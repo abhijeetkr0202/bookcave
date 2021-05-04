@@ -9,7 +9,7 @@ const cors = require('cors');
 
 const mongoURL = require('./config').mongoURL;
 const apiRouterV1 = require('./api/v1/routes/api');
-const { applyPassportStrategy } = require('./config/passport');
+const applyPassport = require('./config/passport');
 const userSchemaValidator = require('./models/user').userSchemaValidator;
 const bookSchemaValidator = require('./models/book').bookSchemaValidator;
 const port = require('./config').port;
@@ -53,7 +53,7 @@ function initServer(MONGODB_URL) {
         console.error(error);
     }).then(()=>{
         console.log("SERVER STARTED ON PORT NUMBER "+port);
-            applyPassportStrategy(passport);
+            applyPassport.applyPassportStrategy(passport);
             
             app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
             app.use(express.json());
@@ -91,6 +91,7 @@ function shutdown() {
     mongoClient.close(() => {
         console.log("MongoDB connection closed.");
     });
+    process.exit(1);
 }
 
 

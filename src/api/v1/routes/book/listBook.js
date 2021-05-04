@@ -2,7 +2,7 @@ const bookcontroller = require("../../controller/bookcontroller");
 
 
 
-exports.geRecentBooksRequest = function()
+exports.getRecentBooksRequest = function()
 {
 return bookcontroller.RecentBookFunction;
 };
