@@ -2,8 +2,11 @@ const usercontroller = require("../../controller/usercontroller");
 
 
 
-exports.signinRequest =function ()
+function signinRequest()
 {
     return usercontroller.signinFunctions;
 }
 
+module.exports={
+    signinRequest
+}

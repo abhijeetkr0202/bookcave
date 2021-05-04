@@ -53,6 +53,7 @@ function initServer(MONGODB_URL) {
         console.error(error);
     }).then(()=>{
         console.log("SERVER STARTED ON PORT NUMBER "+port);
+        
             applyPassport.applyPassportStrategy(passport);
             
             app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
@@ -90,11 +91,9 @@ function getDb() {
 function shutdown() {
     mongoClient.close(() => {
         console.log("MongoDB connection closed.");
+        process.exit(1);
     });
-    process.exit(1);
 }
-
-
 
 
 
@@ -106,21 +105,5 @@ initServer(MONGODB_URL);    //Creating Database connection
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * @description Closes mongoDB connection
- */
 module.exports.getDb = getDb;
-module.exports = app;
+module.exports.app = app;

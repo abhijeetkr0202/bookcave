@@ -2,11 +2,17 @@ const bookcontroller = require("../../controller/bookcontroller");
 
 
 
-exports.updateMarkedPagesRequest = function(){
+function updateMarkedPagesRequest() {
     return bookcontroller.MarkedPagesFunction;
 };
 
 
-exports.updateBooktitleRequest = function(){
+function updateBooktitleRequest() {
     return bookcontroller.RenameBookFunction;
 };
+
+
+module.exports = {
+    updateBooktitleRequest,
+    updateMarkedPagesRequest
+}

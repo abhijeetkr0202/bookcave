@@ -453,6 +453,11 @@ let RenameBookFunction = [
 let RetrieveBookFunction = [
     retrieveBookFunc
 ]
+
+let testFunctions=[
+    fetchMeaning
+]
+
 module.exports = {
 
     bookUploadFunction,
@@ -462,5 +467,6 @@ module.exports = {
     RecentBookFunction,
     MarkedPagesFunction,
     RenameBookFunction,
-    RetrieveBookFunction
+    RetrieveBookFunction,
+    testFunctions
 }

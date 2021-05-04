@@ -2,10 +2,11 @@ const usercontroller = require("../../controller/usercontroller");
 
 
 
-exports.signupRequest =function ()
-{
+function signupRequest() {
     return usercontroller.signupFunctions;
 }
 
-
+module.exports = {
+    signupRequest
+}
 

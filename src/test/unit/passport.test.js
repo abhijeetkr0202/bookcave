@@ -17,7 +17,7 @@ describe('issueJWT',function(){
         expect(issueJWT(data)).to.have.property('data').to.have.property('username');
         expect(issueJWT(data)).to.have.property('data').to.have.property('useremail');
         expect(issueJWT(data)).to.have.property('data').to.have.property('token_type').is.equal("Bearer");
-        expect(issueJWT(data)).to.have.property('data').to.have.property('token');
+        expect(issueJWT(data)).to.have.property('data').to.have.property('token').has.lengthOf(183);
     })
 })
 
@@ -25,6 +25,7 @@ describe('issueJWT',function(){
 describe('parseDataFromToken',function(){
     it('should return data parsed from JWT data passed',function(){
         let token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MDhmZjZmYTdlMmI0OTZkMzhjMjM0NmYiLCJpYXQiOjE2MjAwNDc2ODIuNDE0LCJleHAiOjE2MjAxMzQwODIuNDE0fQ._VefCQXsOtLXWegwjgzE9GNQFnRzSmGrVkw55CR8ZEQ";
-        expect(parseDatafromToken(token)).to.have.keys('_id','iat','exp')
+        expect(parseDatafromToken(token)).to.have.keys('_id','iat','exp');
+        expect(parseDatafromToken(token)).to.have.property('_id').is.equal("608ff6fa7e2b496d38c2346f");
     })
 })

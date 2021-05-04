@@ -1,20 +1,22 @@
 const usercontroller = require("../../controller/usercontroller");
 
 
-
-exports.getProfileRequest = function ()
-{
+function getProfileRequest() {
     return usercontroller.getprofile;
 }
 
 
-exports.editProfileRequest = function ()
-{
+function editProfileRequest() {
     return usercontroller.editprofile;
 }
 
 
-exports.deleteProfileRequest = function()
-{
+function deleteProfileRequest() {
     return usercontroller.deleteprofile;
+}
+
+module.exports = {
+    getProfileRequest,
+    editProfileRequest,
+    deleteProfileRequest
 }

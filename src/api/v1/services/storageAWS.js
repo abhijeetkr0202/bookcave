@@ -11,7 +11,7 @@ const s3 = new AWS.S3({
 });
 
 
-exports.uploadFile = function (file, uid) {
+ function uploadFile(file, uid) {
     let filepath = uid + "/" + file.name;
     const params = {
         Bucket: BUCKET_NAME,
@@ -22,10 +22,16 @@ exports.uploadFile = function (file, uid) {
 };
 
 
-exports.deleteFile = function (filename) {
+function deleteFile(filename) {
     const params = {
         Bucket: BUCKET_NAME,
         Key: filename
     };
     return s3.deleteObject(params).promise();
 };
+
+module.exports={
+    uploadFile,
+    deleteFile,
+
+}

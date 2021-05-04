@@ -1,6 +1,10 @@
 const bookcontroller = require("../../controller/bookcontroller");
 
 
-exports.getMeaningRequest = function(){
+function getMeaningRequest() {
     return bookcontroller.dictionaryFunction;
 };
+
+module.exports = {
+    getMeaningRequest
+}

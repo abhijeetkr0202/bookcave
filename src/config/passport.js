@@ -53,7 +53,7 @@ const strategy = new Strategy(options, (payload, done) => {
  * object with user data
  * @returns Response to API request with user info and TOKEN
  */
-exports.issueJWT = function issueJWT(data) {
+function issueJWT(data) {
     let currDate = Date.now() / 1000;
     let jwtpayload = { _id: data._id, iat: currDate };
     let token = jwt.sign(jwtpayload, config.passport.secret, {
@@ -79,7 +79,7 @@ exports.issueJWT = function issueJWT(data) {
  * @param {string} headerData Token from body header
  * @returns decoded ID from token 
  */
-exports.parseDatafromToken = function parseDatafromToken(headerData) {
+function parseDatafromToken(headerData) {
     let base64Url = headerData;
     base64Url = jwt_decode(base64Url)
     return base64Url;
@@ -87,6 +87,12 @@ exports.parseDatafromToken = function parseDatafromToken(headerData) {
 
 
 
-exports.applyPassportStrategy = function (passport) {
+function applyPassportStrategy(passport) {
     passport.use(strategy);
 };
+
+module.exports = {
+    issueJWT,
+    parseDatafromToken,
+    applyPassportStrategy
+}

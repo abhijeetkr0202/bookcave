@@ -2,14 +2,17 @@ const bookcontroller = require("../../controller/bookcontroller");
 
 
 
-exports.getRecentBooksRequest = function()
-{
-return bookcontroller.RecentBookFunction;
+function getRecentBooksRequest() {
+    return bookcontroller.RecentBookFunction;
 };
 
 
-exports.getListBooksRequest = function()
-{
+function getListBooksRequest() {
     return bookcontroller.bookListFunction;
 };
 
+
+module.exports = {
+    getRecentBooksRequest,
+    getListBooksRequest
+}

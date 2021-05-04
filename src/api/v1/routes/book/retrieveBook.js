@@ -2,7 +2,12 @@ const bookcontroller = require("../../controller/bookcontroller");
 
 
 
-exports.retriveBookRequest = function()
-{
-return bookcontroller.RetrieveBookFunction;
+function retriveBookRequest() {
+    return bookcontroller.RetrieveBookFunction;
 };
+
+
+
+module.exports = {
+    retriveBookRequest
+}

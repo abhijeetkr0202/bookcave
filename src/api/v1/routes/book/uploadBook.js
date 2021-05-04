@@ -1,7 +1,11 @@
 const bookcontroller = require("../../controller/bookcontroller");
 
 
-exports.addBookRequest = function()
-{
+function addBookRequest() {
     return bookcontroller.bookUploadFunction;
 };
+
+
+module.exports = {
+    addBookRequest
+}

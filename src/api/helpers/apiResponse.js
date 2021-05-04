@@ -1,11 +1,11 @@
-exports.successResponse = function (res, msg) {
+function successResponse(res, msg) {
 	let data = {
 		message: msg
 	};
 	return res.status(200).json(data);
 };
 
-exports.successResponseWithData = function (res, msg, data) {
+function successResponseWithData(res, msg, data) {
 	let resData = {
 		message: msg,
 		data: data
@@ -13,7 +13,7 @@ exports.successResponseWithData = function (res, msg, data) {
 	return res.status(200).json(resData);
 };
 
-exports.ModificationResponseWithData = function (res, msg, data) {
+function ModificationResponseWithData(res, msg, data) {
 	let resData = {
 		message: msg,
 		nModified: data
@@ -21,25 +21,25 @@ exports.ModificationResponseWithData = function (res, msg, data) {
 	return res.status(200).json(resData);
 };
 
-exports.successResponseWithToken = function (res, resData) {
+function successResponseWithToken(res, resData) {
 	return res.status(200).json(resData);
 };
 
-exports.ErrorResponse = function (res, msg) {
+function ErrorResponse(res, msg) {
 	let data = {
 		message: msg,
 	};
 	return res.status(500).json(data);
 };
 
-exports.notFoundResponse = function (res, msg) {
+function notFoundResponse(res, msg) {
 	let data = {
 		message: msg,
 	};
 	return res.status(404).json(data);
 };
 
-exports.validationErrorWithData = function (res, msg, data) {
+function validationErrorWithData(res, msg, data) {
 	let resData = {
 		message: msg,
 		data: data
@@ -47,9 +47,20 @@ exports.validationErrorWithData = function (res, msg, data) {
 	return res.status(400).json(resData);
 };
 
-exports.unauthorizedResponse = function (res, msg) {
+function unauthorizedResponse(res, msg) {
 	let data = {
 		message: msg,
 	};
 	return res.status(401).json(data);
 };
+
+module.exports = {
+	successResponse,
+	successResponseWithData,
+	successResponseWithToken,
+	ModificationResponseWithData,
+	ErrorResponse,
+	notFoundResponse,
+	validationErrorWithData,
+	unauthorizedResponse,
+}

@@ -1,7 +1,8 @@
 const bookcontroller = require("../../controller/bookcontroller");
 
 
-exports.deleteBookRequest = function ()
-{
+function deleteBookRequest() {
     return bookcontroller.deleteBookFunction;
 };
+
+module.exports = { deleteBookRequest };

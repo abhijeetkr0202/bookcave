@@ -1,5 +1,5 @@
 const { body, check } = require("express-validator");
-const path = require('path');
+
 
 let db = require("../../app");
 let collectionName = "logincred";
