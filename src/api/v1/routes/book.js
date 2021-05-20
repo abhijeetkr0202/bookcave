@@ -1,13 +1,13 @@
-const router = require(".");
 const passport = require("passport");
+const router = require(".");
 
 
-const deleteCall = require("../routes/book/deleteBook");
-const listCall = require("../routes/book/listBook");
-const updateCall = require("../routes/book/updateBook");
-const dictionaryCall = require("../routes/book/wordDict");
-const uploadCall = require("../routes/book/uploadBook");
-const retrieveCall = require("../routes/book/retrieveBook");
+const deleteCall = require("./book/deleteBook");
+const listCall = require("./book/listBook");
+const updateCall = require("./book/updateBook");
+const dictionaryCall = require("./book/wordDict");
+const uploadCall = require("./book/uploadBook");
+const retrieveCall = require("./book/retrieveBook");
 
 
 
@@ -23,7 +23,7 @@ router.get('/recent', AUTH_MIDDLEWHERE, listCall.getRecentBooksRequest());
 
 router.post('/add', AUTH_MIDDLEWHERE, uploadCall.addBookRequest());
 
-router.post('/fetch', uploadCall.fetchBookRequest());
+router.post('/fetch', AUTH_MIDDLEWHERE, uploadCall.fetchBookRequest());
 
 router.get('/shelf', AUTH_MIDDLEWHERE, listCall.getListBooksRequest());
 

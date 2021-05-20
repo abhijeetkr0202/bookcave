@@ -5,7 +5,7 @@ const FileType = require('file-type');
 
 
 const apiResponse = require('../../helpers/apiResponse');
-let db = require("../../../app");
+const db = require("../../../app");
 const passportFunctions = require("../../../config/passport");
 const bookValidator = require("../../middlewares/validator");
 
@@ -14,10 +14,7 @@ const awsDelete = require("../services/storageAWS").deleteFile;
 
 
 
-let bookCollection = "books";
-
-
-
+const bookCollection = "books";
 
 
 
@@ -45,7 +42,7 @@ function addbookFunc(req, res) {
             if (typeof req.body.booktitle === 'undefined') {
                 req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF|.epub|.EPUB)/, '');
             }
-            let bookData = {
+            const bookData = {
                 "booktitle": req.body.booktitle,
                 "bookfilepath": awsdata.Location,
                 "bookfilename": bookfile.name,
