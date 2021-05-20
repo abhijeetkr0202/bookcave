@@ -23,7 +23,7 @@ router.get('/recent', AUTH_MIDDLEWHERE, listCall.getRecentBooksRequest());
 
 router.post('/add', AUTH_MIDDLEWHERE, uploadCall.addBookRequest());
 
-router.post('/fetch');
+router.post('/fetch', uploadCall.fetchBookRequest());
 
 router.get('/shelf', AUTH_MIDDLEWHERE, listCall.getListBooksRequest());
 

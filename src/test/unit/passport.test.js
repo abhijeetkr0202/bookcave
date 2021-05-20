@@ -14,10 +14,10 @@ describe('issueJWT',function(){
             username:"TestUser",
             useremail:"testuser@gmail.com"
         };
-        expect(issueJWT(data)).to.have.property('data').to.have.property('username');
-        expect(issueJWT(data)).to.have.property('data').to.have.property('useremail');
+        expect(issueJWT(data)).to.have.property('data').to.have.property('username').is.equal("TestUser");
+        expect(issueJWT(data)).to.have.property('data').to.have.property('useremail').is.equal("testuser@gmail.com");
         expect(issueJWT(data)).to.have.property('data').to.have.property('token_type').is.equal("Bearer");
-        expect(issueJWT(data)).to.have.property('data').to.have.property('token').has.lengthOf(183);
+        expect(issueJWT(data)).to.have.property('data').to.have.property('token');
     })
 })
 

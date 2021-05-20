@@ -35,12 +35,19 @@ let validateArray = body('markedpages').isArray().withMessage("Array input requi
 
 
 let validateFile = check('bookfile').custom(function (value, {req}){
-    if (req.files.bookfile.name.match("^.*\.(pdf|PDF)$"))
+    if (req.files.bookfile.name.match("^.*\.(pdf|PDF|epub|EPUB)$"))
     return true;
     else 
     return Promise.reject("Only PDF files allowed");
 });
 
+
+let validateUrl = check('filelink').custom(function (value,{req}) {
+    if(req.body.filelink.indexOf("http://",0) == 0 || req.body.filelink.indexOf("https://",0) == 0) {
+        return true;
+     }
+     return Promise.reject("Invalid url");
+})
 
 
 
@@ -54,5 +61,6 @@ module.exports = {
     validateBooktitle,
     validatelastvisitedon,
     validatelastvisitedpage,
-    validateArray
+    validateArray,
+    validateUrl
 }

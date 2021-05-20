@@ -6,6 +6,12 @@ function addBookRequest() {
 };
 
 
+
+function fetchBookRequest(){
+    return bookcontroller.bookFetchFunction;
+}
+
 module.exports = {
-    addBookRequest
+    addBookRequest,
+    fetchBookRequest
 }

@@ -1,6 +1,5 @@
 const { ExtractJwt, Strategy } = require("passport-jwt");
 const mongo = require('mongodb');
-const { func } = require("joi");
 const jwt = require('jsonwebtoken');
 const jwt_decode = require("jwt-decode");
 
@@ -87,12 +86,8 @@ function parseDatafromToken(headerData) {
 
 
 
-function applyPassportStrategy(passport) {
-    passport.use(strategy);
-};
-
 module.exports = {
     issueJWT,
     parseDatafromToken,
-    applyPassportStrategy
+    strategy
 }

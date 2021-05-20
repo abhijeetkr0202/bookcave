@@ -1,10 +1,11 @@
 const { validationResult } = require("express-validator");
 const mongo = require('mongodb');
 const fetch = require('node-fetch');
+const FileType = require('file-type');
 
 
 const apiResponse = require('../../helpers/apiResponse');
-let db = require("../../../app")
+let db = require("../../../app");
 const passportFunctions = require("../../../config/passport");
 const bookValidator = require("../../middlewares/validator");
 
@@ -13,7 +14,6 @@ const awsDelete = require("../services/storageAWS").deleteFile;
 
 
 
-let userCollection = "logincred";
 let bookCollection = "books";
 
 
@@ -43,7 +43,7 @@ function addbookFunc(req, res) {
     })
         .then((awsdata) => {
             if (typeof req.body.booktitle === 'undefined') {
-                req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF)/, '');
+                req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF|.epub|.EPUB)/, '');
             }
             let bookData = {
                 "booktitle": req.body.booktitle,
@@ -75,6 +75,102 @@ function addbookFunc(req, res) {
 
 
 
+function fetchAddBookFunc(req, res) {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return apiResponse.validationErrorWithData(res, "Validation Error or incorrect file link", errors.array());
+
+    }
+
+
+    let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+
+    fetchFromUrl(req.body.filelink)
+    .catch(function (error) {
+        return apiResponse.ErrorResponse(res,"File not found");
+    })
+    .then(function (response) {
+        return Promise.resolve(response.buffer())
+    })
+    .then(function (filebuffer) {
+        Promise.all([filebuffer, checkFileType(filebuffer)])
+            .then(function (values) 
+            {
+                if (values[1].ext == 'pdf' || values[1].ext == 'epub') 
+                {
+                    file = 
+                    {
+                        name: req.body.booktitle+"."+values[1].ext,
+                        data: values[0]
+                    }
+
+                    return Promise.resolve(file);
+                }
+                return Promise.reject("Invalid File");
+            })
+            .catch(function (error) {
+                return apiResponse.ErrorResponse(res, "Invalid File");
+            })
+            .then(function (file) {
+                return Promise.resolve(awsUpload(file, uid))
+            })
+            .catch(function (error) {
+                return apiResponse.ErrorResponse(res, "Upload error");
+            })
+            .then((awsdata) => {
+                let bookData = {
+                    "booktitle": req.body.booktitle,
+                    "bookfilepath": awsdata.Location,
+                    "bookfilename": req.body.booktitle,
+                    "lastvisitedpage": 0,
+                    "markedpages": [],
+                    "user_id": uid,
+                    "uploadedOn": Date.now(),
+                    "lastvisitedon": Date.now()
+                    }
+                    let dataObject = {
+                        db: db.getDb(),
+                        collectionName: bookCollection,
+                        data: bookData
+                    }
+
+                    return Promise.resolve(insertBookData(dataObject));
+            })
+            .catch(function (error) {
+                return apiResponse.ErrorResponse(res,"Error");
+            })
+            .then(function (data) {
+                return apiResponse.successResponse(res, "Uploaded");
+            }).catch((error) => {
+                return apiResponse.ErrorResponse(res, error);
+            });
+        })
+        .catch(function (error) {
+            return apiResponse.ErrorResponse(res,"Error");
+        })
+
+}
+
+/**
+ * 
+ * @param {string} url 
+ * @returns fetch file from url
+ */
+function fetchFromUrl(url) {
+    return Promise.resolve(fetch(url));
+}
+
+/**
+ * 
+ * @param {buffer array} filebuffer 
+ * @returns filetype 
+ */
+function checkFileType(filebuffer) {
+    return Promise.resolve(FileType.fromBuffer(filebuffer))
+}
+
+
 /**
  * @description Functions that inserts book data in database
  * @param {object} dbObject 
@@ -99,11 +195,11 @@ function insertBookData(dbObject) {
  */
 function listbookFunc(req, res) {
     let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-    let params={
-        db:db.getDb(),
-        collectionName:bookCollection,
-        query:{ "user_id": uid },
-        hide_data:{ "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }
+    let params = {
+        db: db.getDb(),
+        collectionName: bookCollection,
+        query: { "user_id": uid },
+        hide_data: { "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }
     }
     findAllbooks(params).
         then((resArr) => {
@@ -392,30 +488,40 @@ function updateBookdata(dbobj, query, newvalues) {
 
 
 
-function retrieveBookFunc(req,res){
+function retrieveBookFunc(req, res) {
     let uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
     let bid = new mongo.ObjectID(req.params.bid);
-    let params ={
-        db:db.getDb(),
-        query:{"_id":bid,"user_id":uid},
-        hide_data:{"user_id":0},
-        collectionName:bookCollection
+    let params = {
+        db: db.getDb(),
+        query: { "_id": bid, "user_id": uid },
+        hide_data: { "user_id": 0 },
+        collectionName: bookCollection
     };
     getBookDetail(params)
-            .then(function (bookData) {
-                return apiResponse.successResponseWithData(res,"successful",bookData);
-            }).catch((error) => {
-                return apiResponse.notFoundResponse(res, error);
-            });
+        .then(function (bookData) {
+            return apiResponse.successResponseWithData(res, "successful", bookData);
+        }).catch((error) => {
+            return apiResponse.notFoundResponse(res, error);
+        });
 
 }
 
-function getBookDetail(params){
-    return new Promise(function (resolve,reject){
-        let res=params.db.collection(params.collectionName).findOne(params.query,params.hide_data);
+function getBookDetail(params) {
+    return new Promise(function (resolve, reject) {
+        let res = params.db.collection(params.collectionName).findOne(params.query, params.hide_data);
         resolve(res);
     });
 }
+
+
+
+
+
+
+
+
+
+
 
 
 // Arrays to be exported to route functions
@@ -454,10 +560,10 @@ let RetrieveBookFunction = [
     retrieveBookFunc
 ]
 
-let testFunctions=[
-    fetchMeaning
+let bookFetchFunction = [
+    bookValidator.validateUrl,
+    fetchAddBookFunc
 ]
-
 module.exports = {
 
     bookUploadFunction,
@@ -468,5 +574,5 @@ module.exports = {
     MarkedPagesFunction,
     RenameBookFunction,
     RetrieveBookFunction,
-    testFunctions
+    bookFetchFunction
 }
