@@ -7,7 +7,12 @@ const passport = require('passport');
 const http = require('http');
 const fileUpload = require('express-fileupload');
 const cors = require('cors');
-const logger = require('pino-http')();
+const pinolog = require('pino')();
+const logger = require('pino-http')({
+    logger:pinolog
+});
+
+
 
 const {mongoURL} = require('./config');
 const apiRouterV1 = require('./api/v1/routes/api');
@@ -28,7 +33,7 @@ const MONGODB_URL = mongoURL;
  * */
  function shutdown() {
     mongoClient.close(() => {
-        console.log("MongoDB connection closed.");
+        pinolog.info("MongoDB connection closed.");
         process.exit(1);
     });
 }
@@ -46,26 +51,26 @@ const MONGODB_URL = mongoURL;
 function initServer(MONGO_URL) {
     MongoClient.connect(MONGO_URL, { useUnifiedTopology: true })
         .catch(function (error) {
-            console.error(error.message)
+            pinolog.error(error.message)
             process.exit(1)
         })
         .then(function (client) {
             mongoClient = client;
             dbObj = client.db('bookcaveDB');
-            console.log("Connnected to Database");
+            pinolog.info("Connnected to Database");
             return Promise.resolve(dbObj);
         }).catch(function (error) {
-            console.log("Failed Connecting to database");
-            console.error(error.message);
+            pinolog.error("Failed Connecting to database");
+            pinolog.error(error.message);
             process.exit(1);
         })
         .then(function () {
             const server = http.createServer(app);
             return Promise.resolve(server.listen(port));
         }).catch((error) => {
-            console.error(error.message);
+            pinolog.error(error.message);
         }).then(function () {
-            console.log(`SERVER STARTED ON PORT NUMBER ${  port}`);
+            pinolog.info(`SERVER STARTED ON PORT NUMBER ${  port}`);
 
             passport.use(strategy);
 
@@ -82,7 +87,7 @@ function initServer(MONGO_URL) {
             process.on('SIGKILL', shutdown);
             process.on('uncaughtException', shutdown);
         }).catch(function (error) {
-            console.error(error.message);
+            pinolog.error(error.message);
         });
 }
 
