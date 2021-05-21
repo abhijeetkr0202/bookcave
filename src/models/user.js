@@ -1,32 +1,23 @@
-const mongodb = require('mongodb');
-let db = require('../app');
+const Ajv = require('ajv')
+const addFormats = require("ajv-formats")
 
+const ajv = new Ajv()
+addFormats(ajv)
 
-function userSchemaValidator() {
-    db.getDb().createCollection("logincred", {
-        validator: {
-            $jsonSchema: {
-                bsonType: "object",
-                required: ["username", "useremail", "password"],
-                properties: {
-                    username: {
-                        bsonType: "string",
-                        description: "String allowed and is required"
-                    },
-                    useremail: {
-                        bsonType: "string",
-                        description: "String allowed and is required"
-                    },
-                    password: {
-                        bsonType: "bindata",
-                        description: "Hashed password"
-                    }
-                }
-            }
-        }
-    })
+const UserSchema = {
+    type: "object",
+    properties: {
+        username: {type: "string",maxLength:20},
+        useremail: {type: "string",maxLength:30,format:"email"},
+        password: {type: "string"}
+
+    },
+    required: ["username","useremail","password"]
 }
 
+const userDataValidate = ajv.compile(UserSchema);
+
+
 module.exports = {
-    userSchemaValidator
+    userDataValidate
 }

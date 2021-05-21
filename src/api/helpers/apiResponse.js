@@ -1,12 +1,12 @@
 function successResponse(res, msg) {
-	let data = {
+	const data = {
 		message: msg
 	};
 	return res.status(200).json(data);
 };
 
 function successResponseWithData(res, msg, data) {
-	let resData = {
+	const resData = {
 		message: msg,
 		data: data
 	};
@@ -14,7 +14,7 @@ function successResponseWithData(res, msg, data) {
 };
 
 function ModificationResponseWithData(res, msg, data) {
-	let resData = {
+	const resData = {
 		message: msg,
 		nModified: data
 	};
@@ -26,21 +26,21 @@ function successResponseWithToken(res, resData) {
 };
 
 function ErrorResponse(res, msg) {
-	let data = {
+	const data = {
 		message: msg,
 	};
 	return res.status(500).json(data);
 };
 
 function notFoundResponse(res, msg) {
-	let data = {
+	const data = {
 		message: msg,
 	};
 	return res.status(404).json(data);
 };
 
 function validationErrorWithData(res, msg, data) {
-	let resData = {
+	const resData = {
 		message: msg,
 		data: data
 	};
@@ -48,7 +48,7 @@ function validationErrorWithData(res, msg, data) {
 };
 
 function unauthorizedResponse(res, msg) {
-	let data = {
+	const data = {
 		message: msg,
 	};
 	return res.status(401).json(data);

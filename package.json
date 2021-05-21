@@ -19,6 +19,8 @@
   },
   "homepage": "https://gitlab.com/flipr-ai/backend/abhijeet/bookcave#readme",
   "dependencies": {
+    "ajv": "^8.5.0",
+    "ajv-formats": "^2.1.0",
     "aws-sdk": "^2.894.0",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
@@ -46,6 +48,7 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "path": "^0.12.7",
+    "pino-http": "^5.5.0",
     "prettier": "^2.3.0",
     "superagent": "^6.1.0",
     "supertest": "^6.1.3"

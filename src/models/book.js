@@ -1,53 +1,27 @@
-const mongodb = require('mongodb');
-let db = require('../app');
+const Ajv = require('ajv')
+const addFormats = require("ajv-formats")
 
+const ajv = new Ajv()
+addFormats(ajv)
 
-function bookSchemaValidator() {
-    db.getDb().createCollection("books", {
-        validator: {
-            $jsonSchema: {
-                bsonType: "object",
-                required: ["booktitle", "bookfilepath", "lastvisitedpage"],
-                properties: {
-                    booktitle: {
-                        bsonType: "string",
-                        description: "String allowed and is required"
-                    },
-                    bookfilename: {
-                        bsonType: "string",
-                        description: "String allowed"
-                    },
-                    bookfilepath: {
-                        bsonType: "string",
-                        description: "String allowed and is required"
-                    },
-                    lastvisitedpage: {
-                        bsonType: "int",
-                        description: "Integer allowed and is required"
-                    },
-                    markedpages: {
-                        bsonType: "array",
-                        description: "Array of integers allowed and is required"
-                    },
-                    user_id: {
-                        bsonType: "objectId",
-                        description: "object id allowed and is required"
-                    },
-                    uploadedOn: {
-                        bsonType: "timestamp",
-                        description: "epoch timestamp allowed and is required"
-                    },
-                    lastvisitedon: {
-                        bsonType: "timestamp",
-                        description: "epoch timestamp allowed and is required"
-                    }
-                }
-            }
-        }
-    })
+const BookSchema = {
+    type: "object",
+    properties: {
+        booktitle: {type: "string",maxLength:30},
+        bookfilepath: {type: "string",format:"uri"},
+        bookfilename: {type: "string",maxLength:30},
+        lastvisitedpage: {type: "integer"},
+        markedpages: {type: "array"},
+        uploadedOn: {type: "number"},
+        lastvisitedon: {type: "number"},
+
+    },
+    required: ["booktitle","bookfilepath","bookfilename","lastvisitedpage","markedpages","uploadedOn","lastvisitedon"]
 }
+
+const bookDataValidate = ajv.compile(BookSchema);
 
 
 module.exports = {
-    bookSchemaValidator
+    bookDataValidate
 }
