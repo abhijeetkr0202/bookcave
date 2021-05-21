@@ -38,6 +38,15 @@ const bookCollection = "books";
 
 };
 
+/**
+ * @description creates indexes in DB
+ * @param {object} dbObject 
+ * @returns 
+ */
+function createUserIndex(dbObject){
+    return dbObject.db.createIndex(dbObject.collectionName,dbObject.indexField);
+}
+
 
 /**
  * @description Checks for validation results and adds new user to database accordingly
@@ -69,10 +78,15 @@ function signupFunc(req, res) {
             collectionName: userCollection,
             data: signUpData
         }
-        return Promise.resolve(insertSignupData(dataObject));
+        const indexObject = {
+            db: db.getDb(),
+            collectionName:userCollection,
+            indexField: signUpData.useremail
+        }
+        return Promise.all([insertSignupData(dataObject),createUserIndex(indexObject)]);
     })
     .then(function (jwtData) {
-        return Promise.resolve(passportFunctions.issueJWT(jwtData));
+        return Promise.resolve(passportFunctions.issueJWT(jwtData[0]));
     })
     .then(function (responseData) {
         return apiResponse.successResponseWithToken(res, responseData);
