@@ -40,6 +40,17 @@ function checkFileType(filebuffer) {
 }
 
 
+
+/**
+ * @description creates indexes in DB
+ * @param {object} dbObject 
+ * @returns 
+ */
+ function createBookIndex(dbObject){
+    return dbObject.db.createIndex(dbObject.collectionName,dbObject.indexField);
+}
+
+
 /**
  * @description Functions that inserts book data in database
  * @param {object} dbObject 
@@ -94,7 +105,14 @@ function addbookFunc(req, res) {
                 data: bookData
             }
 
-            return Promise.resolve(insertBookData(dataObject));
+      
+            const bookIndexData = {
+                db: db.getDb(),
+                collectionName:bookCollection,
+                indexField:[[bookData.user_id,1],[bookData.bookfilename,1]]
+            }
+
+            return Promise.all([insertBookData(dataObject),createBookIndex(bookIndexData)]);
         })
         .then(function (data) {
             return apiResponse.successResponse(res, "Uploaded");
