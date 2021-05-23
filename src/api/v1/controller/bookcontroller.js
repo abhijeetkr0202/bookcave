@@ -617,5 +617,6 @@ module.exports = {
     MarkedPagesFunction,
     RenameBookFunction,
     RetrieveBookFunction,
-    bookFetchFunction
+    bookFetchFunction,
+    checkFileType
 }

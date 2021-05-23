@@ -1,15 +1,16 @@
-let chai = require('chai');
+const chai = require('chai');
 
-let expect= chai.expect;
+const {expect} = chai;
 
-let issueJWT = require("../../config/passport").issueJWT;
+const {issueJWT} = require("../../config/passport");
 
-let parseDatafromToken = require("../../config/passport").parseDatafromToken;
+const {parseDatafromToken} = require("../../config/passport");
+
 
 
 describe('issueJWT',function(){
     it('should return object with Authentication token and token type',function(){
-        let data = {
+        const data = {
             _id:"608ff6fa7e2b496d38c2346f",
             username:"TestUser",
             useremail:"testuser@gmail.com"
@@ -24,8 +25,9 @@ describe('issueJWT',function(){
 
 describe('parseDataFromToken',function(){
     it('should return data parsed from JWT data passed',function(){
-        let token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MDhmZjZmYTdlMmI0OTZkMzhjMjM0NmYiLCJpYXQiOjE2MjAwNDc2ODIuNDE0LCJleHAiOjE2MjAxMzQwODIuNDE0fQ._VefCQXsOtLXWegwjgzE9GNQFnRzSmGrVkw55CR8ZEQ";
+        const token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MDhmZjZmYTdlMmI0OTZkMzhjMjM0NmYiLCJpYXQiOjE2MjAwNDc2ODIuNDE0LCJleHAiOjE2MjAxMzQwODIuNDE0fQ._VefCQXsOtLXWegwjgzE9GNQFnRzSmGrVkw55CR8ZEQ";
         expect(parseDatafromToken(token)).to.have.keys('_id','iat','exp');
         expect(parseDatafromToken(token)).to.have.property('_id').is.equal("608ff6fa7e2b496d38c2346f");
     })
 })
+

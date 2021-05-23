@@ -15,10 +15,10 @@ options.secretOrKey = config.passport.secret;
 
 
 const strategy = new Strategy(options, (payload, done) => {
-    logincredcollection = db.getDb().collection("logincred");
-    let o_id = new mongo.ObjectID(payload._id);
+    const logincredcollection = db.getDb().collection("logincred");
+    const objId = new mongo.ObjectID(payload._id);
 
-    logincredcollection.findOne({ _id: o_id })
+    logincredcollection.findOne({ _id: objId })
         .then((user) => {
             if (user) {
                 return done(null, {
@@ -27,7 +27,7 @@ const strategy = new Strategy(options, (payload, done) => {
                 });
             }
             return done(null, false);
-        }).catch((err) => {
+        }).catch(function (err) {
             return done(err, false);
         })
 
@@ -53,13 +53,13 @@ const strategy = new Strategy(options, (payload, done) => {
  * @returns Response to API request with user info and TOKEN
  */
 function issueJWT(data) {
-    let currDate = Date.now() / 1000;
-    let jwtpayload = { _id: data._id, iat: currDate };
-    let token = jwt.sign(jwtpayload, config.passport.secret, {
+    const currDate = Date.now() / 1000;
+    const jwtpayload = { _id: data._id, iat: currDate };
+    const token = jwt.sign(jwtpayload, config.passport.secret, {
         expiresIn: config.passport.EXPIRES_IN,
     });
 
-    let responseJWT = {
+    const responseJWT = {
         "data": {
             username: data.username,
             useremail: data.useremail
