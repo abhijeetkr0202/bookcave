@@ -8,7 +8,7 @@ function successResponse(res, msg) {
 function successResponseWithData(res, msg, data) {
 	const resData = {
 		message: msg,
-		data: data
+		data
 	};
 	return res.status(200).json(resData);
 };
@@ -42,7 +42,7 @@ function notFoundResponse(res, msg) {
 function validationErrorWithData(res, msg, data) {
 	const resData = {
 		message: msg,
-		data: data
+		data
 	};
 	return res.status(400).json(resData);
 };

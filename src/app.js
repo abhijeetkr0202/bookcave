@@ -50,26 +50,26 @@ const MONGODB_URL = mongoURL;
 
 function initServer(MONGO_URL) {
     MongoClient.connect(MONGO_URL, { useUnifiedTopology: true })
-        .catch(function (error) {
+        .catch((error) => {
             pinolog.error(error.message)
             process.exit(1)
         })
-        .then(function (client) {
+        .then((client) => {
             mongoClient = client;
             dbObj = client.db('bookcaveDB');
             pinolog.info("Connnected to Database");
             return Promise.resolve(dbObj);
-        }).catch(function (error) {
+        }).catch((error) => {
             pinolog.error("Failed Connecting to database");
             pinolog.error(error.message);
             process.exit(1);
         })
-        .then(function () {
+        .then(() => {
             const server = http.createServer(app);
             return Promise.resolve(server.listen(port));
         }).catch((error) => {
             pinolog.error(error.message);
-        }).then(function () {
+        }).then(() => {
             pinolog.info(`SERVER STARTED ON PORT NUMBER ${  port}`);
 
             passport.use(strategy);
@@ -86,7 +86,7 @@ function initServer(MONGO_URL) {
             process.on('SIGTERM', shutdown);
             process.on('SIGKILL', shutdown);
             process.on('uncaughtException', shutdown);
-        }).catch(function (error) {
+        }).catch((error) => {
             pinolog.error(error.message);
         });
 }

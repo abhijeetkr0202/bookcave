@@ -57,43 +57,40 @@ function createUserIndex(dbObject){
 function signupFunc(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
+        apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
     }
-    bcrypt.hash(req.body.password, 10)
-    .then(function (hash) {
-        const signUpData = {
-            "username": req.body.username,
-            "useremail": req.body.useremail,
-            "password": hash
-        }
-        if(!userSchemaValidate(signUpData))
-        {
-            throw new Error("User Data Failed Schema Validation")
-        }
-        return Promise.resolve(signUpData);
-    })
-    .then(function (signUpData) {
-        const dataObject = {
-            db: db.getDb(),
-            collectionName: userCollection,
-            data: signUpData
-        }
-        const indexObject = {
-            db: db.getDb(),
-            collectionName:userCollection,
-            indexField: signUpData.useremail
-        }
-        return Promise.all([insertSignupData(dataObject),createUserIndex(indexObject)]);
-    })
-    .then(function (jwtData) {
-        return Promise.resolve(passportFunctions.issueJWT(jwtData[0]));
-    })
-    .then(function (responseData) {
-        return apiResponse.successResponseWithToken(res, responseData);
-    })
-    .catch(function (error) {
-        return apiResponse.ErrorResponse(res,error.message)
-    });
+    else
+    {
+        bcrypt.hash(req.body.password, 10)
+        .then((hash) => {
+            const signUpData = {
+                "username": req.body.username,
+                "useremail": req.body.useremail,
+                "password": hash
+            }
+            if(!userSchemaValidate(signUpData))
+            {
+                throw new Error("User Data Failed Schema Validation")
+            }
+            return Promise.resolve(signUpData);
+        })
+        .then((signUpData) => {
+            const dataObject = {
+                db: db.getDb(),
+                collectionName: userCollection,
+                data: signUpData
+            }
+            const indexObject = {
+                db: db.getDb(),
+                collectionName:userCollection,
+                indexField: signUpData.useremail
+            }
+            return Promise.all([insertSignupData(dataObject),createUserIndex(indexObject)]);
+        })
+        .then((jwtData) => Promise.resolve(passportFunctions.issueJWT(jwtData[0])))
+        .then((responseData) => apiResponse.successResponseWithToken(res, responseData))
+        .catch((error) => apiResponse.ErrorResponse(res,error.message));
+    }
 };
 
 
@@ -123,31 +120,33 @@ function signupFunc(req, res) {
 function signinFunc(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return apiResponse.validationErrorWithData(res, "validation Error", errors.array());
+        apiResponse.validationErrorWithData(res, "validation Error", errors.array());
     }
-    const paramobj = {
-        query: { useremail: req.body.useremail },
-        db: db.getDb(),
-        collectionName: userCollection,
+    else
+    {
+        const paramobj = {
+            query: { useremail: req.body.useremail },
+            db: db.getDb(),
+            collectionName: userCollection,
 
+        }
+        // eslint-disable-next-line consistent-return
+        findUser(paramobj).then((data) => {
+            if (data) {
+
+                bcrypt.compare(req.body.password, data.password)
+                    .then((same) => {
+                        if (same) {
+                            return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
+                        }
+                        return apiResponse.unauthorizedResponse(res, "Wrong password");
+                    })
+            }
+            else {
+                apiResponse.unauthorizedResponse(res, "Wrong Credentials")
+            }
+        }).catch((error)=> apiResponse.ErrorResponse(res, error.message));
     }
-    findUser(paramobj).then(function (data) {
-        if (data) {
-
-            bcrypt.compare(req.body.password, data.password)
-                .then(function (same) {
-                    if (same) {
-                        return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
-                    }
-                    return apiResponse.unauthorizedResponse(res, "Wrong password");
-                })
-        }
-        else {
-            return apiResponse.unauthorizedResponse(res, "Wrong Credentials")
-        }
-    }).catch(function (error){
-        return apiResponse.ErrorResponse(res, error.message);
-    });
 };
 
 
@@ -164,20 +163,19 @@ function signinFunc(req, res) {
  */
 function getprofile(req, res) {
 
-    const objId = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const objId  = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
     const paramObj = {
         query: { "_id": objId },
         collectionName: userCollection,
         db: db.getDb()
     }
     findUser(paramObj)
-        .then(function (userInfo) {
-            delete userInfo.password;
-            delete userInfo._id;
-            return apiResponse.successResponseWithData(res, "Success", userInfo);
-        }).catch(function (error){
-            return apiResponse.notFoundResponse(res, error.message);
-        });
+        .then((userInfo) => {
+            const userData = JSON.parse(JSON.stringify(userInfo));
+            delete userData.password;
+            delete userData._id;
+            apiResponse.successResponseWithData(res, "Success", userData);
+        }).catch((error)=> apiResponse.notFoundResponse(res, error.message));
 
 };
 
@@ -216,11 +214,8 @@ function editprofile(req, res) {
     const query = { _id: objId };
     const logincredcollection = db.getDb().collection(userCollection);
     updateUser(logincredcollection, query, newvalues)
-        .then(function (userInfo) {
-            return apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified);
-        }).catch(function (error) {
-            return apiResponse.notFoundResponse(res, "user not find");
-        });
+        .then((userInfo) => apiResponse.ModificationResponseWithData(res, "Modified", userInfo.result.nModified))
+        .catch((error) => apiResponse.notFoundResponse(res, error.message));
 };
 
 
@@ -276,11 +271,8 @@ function deleteprofile(req, res) {
     }
 
     Promise.all([deleteUserData(obj), deleteUsersBookData(bObj)])
-        .then(function () {
-            return apiResponse.ModificationResponseWithData(res, "Deleted");
-        }).catch(function (error){
-            return apiResponse.notFoundResponse(res, "user not find");
-        });
+        .then(() => apiResponse.ModificationResponseWithData(res, "Deleted"))
+        .catch((error)=> apiResponse.notFoundResponse(res, error.message));
 
 
 

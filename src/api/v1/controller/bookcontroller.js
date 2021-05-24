@@ -74,53 +74,57 @@ function addbookFunc(req, res) {
 
     const errors = validationResult(req);
     if (!errors.isEmpty() || !req.files) {
-        return apiResponse.validationErrorWithData(res, "Validation Error or missing file", errors.array());
+        apiResponse.validationErrorWithData(res, "Validation Error or missing file", errors.array());
 
     }
+    else
+    {
+        const {bookfile} = req.files;
+        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        awsUpload(bookfile, uid)
+            .then((awsdata) => {
+                if (typeof req.body.booktitle === 'undefined') {
+                    req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF|.epub|.EPUB)/, '');
+                }
+                const bookData = {
+                    "booktitle": req.body.booktitle,
+                    "bookfilepath": awsdata.Location,
+                    "bookfilename": bookfile.name,
+                    "lastvisitedpage": 0,
+                    "markedpages": [],
+                    "user_id": uid,
+                    "uploadedOn": Date.now(),
+                    "lastvisitedon": Date.now()
+                }
+                if(!bookSchemaValidate(bookData))
+                {
+                    throw new Error("Book Data Failed Schema Validation")
+                }
+                const dataObject = {
+                    db: db.getDb(),
+                    collectionName: bookCollection,
+                    data: bookData
+                }
 
-    const {bookfile} = req.files;
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-    awsUpload(bookfile, uid)
-        .then((awsdata) => {
-            if (typeof req.body.booktitle === 'undefined') {
-                req.body.booktitle = bookfile.name.replace(/(.pdf|.PDF|.epub|.EPUB)/, '');
-            }
-            const bookData = {
-                "booktitle": req.body.booktitle,
-                "bookfilepath": awsdata.Location,
-                "bookfilename": bookfile.name,
-                "lastvisitedpage": 0,
-                "markedpages": [],
-                "user_id": uid,
-                "uploadedOn": Date.now(),
-                "lastvisitedon": Date.now()
-            }
-            if(!bookSchemaValidate(bookData))
-            {
-                throw new Error("Book Data Failed Schema Validation")
-            }
-            const dataObject = {
-                db: db.getDb(),
-                collectionName: bookCollection,
-                data: bookData
-            }
+            
+                const bookIndexData = {
+                    db: db.getDb(),
+                    collectionName:bookCollection,
+                    indexField:[[bookData.user_id,1],[bookData.bookfilename,1]]
+                }
 
-      
-            const bookIndexData = {
-                db: db.getDb(),
-                collectionName:bookCollection,
-                indexField:[[bookData.user_id,1],[bookData.bookfilename,1]]
+                return Promise.all([insertBookData(dataObject),createBookIndex(bookIndexData)]);
+            })
+            .then((data) => {if(data){
+               apiResponse.successResponse(res, "Uploaded");
             }
+            else{
+                apiResponse.ErrorResponse(res,"Failed");
+            }
+            })
+            .catch((error) => apiResponse.ErrorResponse(res, error.message));
 
-            return Promise.all([insertBookData(dataObject),createBookIndex(bookIndexData)]);
-        })
-        .then(function (data) {
-            return apiResponse.successResponse(res, "Uploaded");
-        }).catch(function (error) {
-            return apiResponse.ErrorResponse(res, error.message);
-        });
-
-
+    }
 }
 
 
@@ -130,74 +134,62 @@ function fetchAddBookFunc(req, res) {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        return apiResponse.validationErrorWithData(res, "Validation Error or incorrect file link", errors.array());
+        apiResponse.validationErrorWithData(res, "Validation Error or incorrect file link", errors.array());
 
     }
 
+    else
+    {
+        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
 
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
-
-    fetchFromUrl(req.body.filelink)
-    .then(function (response) {
-        return Promise.resolve(response.buffer())
-    })
-    .catch(function (error) {
-        return apiResponse.ErrorResponse(res,"File not found");
-    })
-    .then(function (filebuffer) {
-        Promise.all([filebuffer, checkFileType(filebuffer)])
-            .then(function (values) 
-            {
-                if (values[1].ext === 'pdf' || values[1].ext === 'epub') 
-                {
-                    const file = 
+        fetchFromUrl(req.body.filelink)
+        .then((response) => Promise.resolve(response.buffer()))
+        .then((filebuffer) => {
+            Promise.all([filebuffer, checkFileType(filebuffer)])
+                .then((values)=> {
+                    if (values[1].ext === 'pdf' || values[1].ext === 'epub') 
                     {
-                        name: `${req.body.booktitle}.${values[1].ext}`,
-                        data: values[0]
-                    }
+                        const file = 
+                        {
+                            name: `${req.body.booktitle}.${values[1].ext}`,
+                            data: values[0]
+                        }
 
-                    return Promise.resolve(file);
-                }
-                throw new Error("Invalid File")
-            })
-            .then(function (file) {
-                return Promise.resolve(awsUpload(file, uid))
-            })
-            .catch(function (error) {
-                return apiResponse.ErrorResponse(res,error.message);
-            })
-            .then((awsdata) => {
-                const bookData = {
-                    "booktitle": req.body.booktitle,
-                    "bookfilepath": awsdata.Location,
-                    "bookfilename": req.body.booktitle,
-                    "lastvisitedpage": 0,
-                    "markedpages": [],
-                    "user_id": uid,
-                    "uploadedOn": Date.now(),
-                    "lastvisitedon": Date.now()
+                        return Promise.resolve(file);
                     }
-                    if(!bookSchemaValidate)
-                    {
-                        throw new Error("Book Data Failed Schema Validation")
-                    }
-                    const dataObject = {
-                        db: db.getDb(),
-                        collectionName: bookCollection,
-                        data: bookData
-                    }
+                    throw new Error("Invalid File")
+                })
+                .catch((error) => apiResponse.ErrorResponse(res, error.message))
+                .then((file) => Promise.resolve(awsUpload(file, uid)))
+                .then((awsdata) => {
+                    const bookData = {
+                        "booktitle": req.body.booktitle,
+                        "bookfilepath": awsdata.Location,
+                        "bookfilename": req.body.booktitle,
+                        "lastvisitedpage": 0,
+                        "markedpages": [],
+                        "user_id": uid,
+                        "uploadedOn": Date.now(),
+                        "lastvisitedon": Date.now()
+                        }
+                        if(!bookSchemaValidate)
+                        {
+                            throw new Error("Book Data Failed Schema Validation")
+                        }
+                        const dataObject = {
+                            db: db.getDb(),
+                            collectionName: bookCollection,
+                            data: bookData
+                        }
 
-                    return Promise.resolve(insertBookData(dataObject));
+                        return Promise.resolve(insertBookData(dataObject));
+                })
+                // eslint-disable-next-line no-unused-vars
+                .then((data) => apiResponse.successResponse(res, "Uploaded"))
+                
             })
-            .then(function (data) {
-                return apiResponse.successResponse(res, "Uploaded");
-            }).catch(function (error) {
-                return apiResponse.ErrorResponse(res, error.message);
-            });
-        })
-        .catch(function (error) {
-            return apiResponse.ErrorResponse(res,error.message);
-        })
+            .catch((error) =>apiResponse.ErrorResponse(res,error.message))
+        }
 
 }
 
@@ -235,16 +227,19 @@ function listbookFunc(req, res) {
         hide_data: { "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }
     }
     findAllbooks(params).
-        then((resArr) => {
+        then((resdata) => {
+            const resArr = JSON.parse(JSON.stringify(resdata));
             resArr.forEach(book => {
+
+                // eslint-disable-next-line no-param-reassign
                 delete book.user_id;
+                // eslint-disable-next-line no-param-reassign
                 delete book.lastvisitedpage;
+                // eslint-disable-next-line no-param-reassign
                 delete book.markedpages;
             });
-            return apiResponse.successResponseWithData(res, "Successful", resArr)
-        }).catch(function (error){
-            return apiResponse.ErrorResponse(res, error.message);
-        });
+            apiResponse.successResponseWithData(res, "Successful", resArr)
+        }).catch((error)=> apiResponse.ErrorResponse(res, error.message));
 }
 
 
@@ -281,7 +276,7 @@ function listbookFunc(req, res) {
  * @returns 
  */
 function deletebook(paramObj) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const collection = paramObj.db.collection(paramObj.collectionName);
         resolve(collection.deleteOne(paramObj.query));
     })
@@ -308,24 +303,16 @@ function deleteFunc(req, res) {
     }
 
     getFilePath(paramObj)
-        .then(function (data) {
+        .then((data) => {
             const filepath = `${paramObj.query.user_id  }/${  data[0].bookfilename}`;
             return Promise.resolve(filepath);
         })
-        .then(function (filepathvalue) {
+        .then((filepathvalue) => {
             awsDelete(filepathvalue)
-                .then(function () {
-                    return Promise.resolve(deletebook(paramObj));
-                })
-                .catch(function (error) {
-                    return apiResponse.ErrorResponse(res, error.response);
-                })
-                .then(function () {
-                    return apiResponse.successResponse(res, "Deleted");
-                })
-        }).catch(function (err) {
-            return apiResponse.notFoundResponse(res, "Not found");
-        })
+                .then(() => Promise.resolve(deletebook(paramObj)))
+                .catch((error) => apiResponse.ErrorResponse(res, error.response))
+                .then(() => apiResponse.successResponse(res, "Deleted"))
+        }).catch((err) => apiResponse.notFoundResponse(res, err.message))
 
     
 
@@ -354,34 +341,35 @@ function deleteFunc(req, res) {
  * @param {object} res 
  */
  function getMeaningFunc(req, res) {
+    // eslint-disable-next-line prefer-destructuring
     const word = req.params.word;
+    // eslint-disable-next-line prefer-destructuring
     const lang = req.params.lang;
     fetchMeaning(word, lang)
         .then(response => response.json())
-        .catch(function(error){
-            return apiResponse.ErrorResponse(res, error);
-        })
-        .then(function (json) {
+        .catch((error)=> apiResponse.ErrorResponse(res, error))
+        .then((jsonData) => {
+            let json = JSON.parse(JSON.stringify(jsonData));
             let status = "Successful";
-            if (json.title == "No Definitions Found") {
+            if (json.title === "No Definitions Found") {
                 status = json.title
                 json = {}
             }
             else {
+                // eslint-disable-next-line prefer-destructuring
                 json = json[0];
                 delete json.phonetics
                 delete json.word
                 json.meanings.forEach((element) => {
                     element.definitions.forEach((obj) => {
+                        // eslint-disable-next-line no-param-reassign
                         delete obj.synonyms
                     })
                 })
             }
-            return apiResponse.successResponseWithData(res, status, json)
+            apiResponse.successResponseWithData(res, status, json)
         })
-        .catch(function(error) {
-            return apiResponse.ErrorResponse(res, error.message);
-        });
+        .catch((error) => apiResponse.ErrorResponse(res, error.message));
 }
 
 
@@ -395,7 +383,7 @@ function deleteFunc(req, res) {
  * @returns 
  */
  function findRecentbooks(dbobj) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const resArr = dbobj.db.collection(dbobj.collectionName).find({ "user_id": dbobj.id }, { "user_id": 0, "markedpages": 0, "lastvisitedpage": 0 }).sort({ "lastvisitedon": -1 }).limit(2).toArray();
         resolve(resArr);
     });
@@ -421,16 +409,18 @@ function getRecentFunc(req, res) {
         id: uid
     }
     findRecentbooks(dbobj)
-        .then(function (resArr) {
+        .then((resData) => {
+            const resArr = JSON.parse(JSON.stringify(resData));
             resArr.forEach(book => {
+                // eslint-disable-next-line no-param-reassign
                 delete book.user_id;
+                // eslint-disable-next-line no-param-reassign
                 delete book.lastvisitedpage;
+                // eslint-disable-next-line no-param-reassign
                 delete book.markedpages;
             });
-            return apiResponse.successResponseWithData(res, "Successful", resArr)
-        }).catch(function (error) {
-            return apiResponse.ErrorResponse(res, error.message);
-        });
+            apiResponse.successResponseWithData(res, "Successful", resArr)
+        }).catch((error) => apiResponse.ErrorResponse(res, error.message));
 
 }
 
@@ -443,7 +433,7 @@ function getRecentFunc(req, res) {
  * @returns Promise
  */
  function updateBookdata(dbobj, query, newvalues) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve) => {
         resolve(dbobj.updateOne(query, newvalues));
     });
 }
@@ -460,9 +450,10 @@ function getRecentFunc(req, res) {
 function updateMarkedPagesFunc(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
+        apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
     }
-    
+    else
+    {
         const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
         const bid = new mongo.ObjectID(req.params.bid);
         const newData = {
@@ -474,12 +465,9 @@ function updateMarkedPagesFunc(req, res) {
 
 
         updateBookdata(bookcollection, query, newvalues)
-            .then(function (Info) {
-                return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
-            }).catch(function (error){
-                return apiResponse.notFoundResponse(res, error.message);
-            });
-    
+            .then((Info) => apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified))
+            .catch((error)=> apiResponse.notFoundResponse(res, error.message));
+    }
 }
 
 
@@ -493,9 +481,10 @@ function updateMarkedPagesFunc(req, res) {
 function updateBooktitleFunc(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
+        apiResponse.validationErrorWithData(res, "Validation Error", errors.array());
     }
-    
+    else
+    {
         const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
         const bid = new mongo.ObjectID(req.params.bid);
         const newData = {
@@ -507,12 +496,9 @@ function updateBooktitleFunc(req, res) {
 
 
         updateBookdata(bookcollection, query, newvalues)
-            .then(function (Info) {
-                return apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified);
-            }).catch(function (error){
-                return apiResponse.notFoundResponse(res, error.message);
-            });
-    
+            .then((Info) => apiResponse.ModificationResponseWithData(res, "Modified", Info.result.nModified))
+            .catch((error)=> apiResponse.notFoundResponse(res, error.message));
+    }
 }
 
 
@@ -522,7 +508,7 @@ function updateBooktitleFunc(req, res) {
  * @returns book details using param
  */
 function getBookDetail(params) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve) => {
         const res = params.db.collection(params.collectionName).findOne(params.query, params.hide_data);
         resolve(res);
     });
@@ -547,11 +533,8 @@ function retrieveBookFunc(req, res) {
         collectionName: bookCollection
     };
     getBookDetail(params)
-        .then(function (bookData) {
-            return apiResponse.successResponseWithData(res, "successful", bookData);
-        }).catch(function (error) {
-            return apiResponse.notFoundResponse(res, error.message);
-        });
+        .then((bookData) => apiResponse.successResponseWithData(res, "successful", bookData))
+        .catch((error) => apiResponse.notFoundResponse(res, error.message));
 
 }
 

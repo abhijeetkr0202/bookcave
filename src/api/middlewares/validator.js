@@ -2,6 +2,7 @@ const { body, check } = require("express-validator");
 
 
 const db = require("../../app");
+
 const collectionName = "logincred";
 
 
@@ -14,14 +15,12 @@ const validateUseremail = body('useremail').trim().isEmail().withMessage("Valid 
 
 const validatePassword = body('password').isLength({ min: 1 }).trim().withMessage("Password must be specified")
 
-const isDuplicateUser = body('useremail').custom(function (value) {
-
-    return db.getDb().collection(collectionName).findOne({ "useremail": value }).then((data) => {
+const isDuplicateUser = body('useremail').custom((value) => db.getDb().collection(collectionName).findOne({ "useremail": value }).then((data) => {
         if (data) {
-            return Promise.reject("E-mail already registered");
+            return Promise.reject(new Error("E-mail already registered"));
         }
-    })
-});
+        return true;
+    }));
 
 
 
@@ -34,19 +33,18 @@ const validatelastvisitedon = body('lastvisitedon').trim().isNumeric().withMessa
 const validateArray = body('markedpages').isArray().withMessage("Array input required")
 
 
-const validateFile = check('bookfile').custom(function (value, {req}){
-    if (req.files.bookfile.name.match("^.*\.(pdf|PDF|epub|EPUB)$"))
+const validateFile = check('bookfile').custom((value, {req})=> {
+    if (req.files.bookfile.name.match("^.*.(pdf|PDF|epub|EPUB)$"))
     return true;
-    else 
-    return Promise.reject("Only PDF files allowed");
+    return Promise.reject(new Error("Only PDF files allowed"));
 });
 
 
-const validateUrl = check('filelink').custom(function (value,{req}) {
-    if(req.body.filelink.indexOf("http://",0) == 0 || req.body.filelink.indexOf("https://",0) == 0) {
+const validateUrl = check('filelink').custom((value,{req}) => {
+    if(req.body.filelink.indexOf("http://",0) === 0 || req.body.filelink.indexOf("https://",0) === 0) {
         return true;
      }
-     return Promise.reject("Invalid url");
+     return Promise.reject(new Error("Invalid url"));
 })
 
 

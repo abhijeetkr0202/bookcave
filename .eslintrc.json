@@ -11,11 +11,7 @@
         "ecmaVersion": 12
     },
     "rules": {
-        "prefer-arrow-callback":"off",
-        "func-names":"off",
-        "consistent-return":"off",
         "no-underscore-dangle":"off",
-        "no-param-reassign":"off",
         "no-process-exit":"off"
     }
 }

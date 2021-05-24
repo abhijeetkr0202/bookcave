@@ -1,7 +1,7 @@
 const { ExtractJwt, Strategy } = require("passport-jwt");
 const mongo = require('mongodb');
 const jwt = require('jsonwebtoken');
-const jwt_decode = require("jwt-decode");
+const jwtDecode = require("jwt-decode");
 
 
 const config = require(".");
@@ -27,9 +27,7 @@ const strategy = new Strategy(options, (payload, done) => {
                 });
             }
             return done(null, false);
-        }).catch(function (err) {
-            return done(err, false);
-        })
+        }).catch((err) => done(err, false))
 
 
 });
@@ -80,7 +78,7 @@ function issueJWT(data) {
  */
 function parseDatafromToken(headerData) {
     let base64Url = headerData;
-    base64Url = jwt_decode(base64Url)
+    base64Url = jwtDecode(base64Url)
     return base64Url;
 }
 

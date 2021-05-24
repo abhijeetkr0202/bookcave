@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 
 const ACCESS_KEY_ID = require('../../../config/index').S3_ID;
 const SECRET_KEY = require('../../../config/index').S3_SECRET;
-const BUCKET_NAME = require('../../../config/index').BUCKET_NAME;
+const {BUCKET_NAME} = require('../../../config/index');
 
 
 const s3 = new AWS.S3({
@@ -12,7 +12,7 @@ const s3 = new AWS.S3({
 
 
  function uploadFile(file, uid) {
-    let filepath = uid + "/" + file.name;
+    const filepath = `${uid  }/${  file.name}`;
     const params = {
         Bucket: BUCKET_NAME,
         Key: filepath,
