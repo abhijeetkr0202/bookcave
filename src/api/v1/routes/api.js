@@ -1,10 +1,11 @@
-const express = require("express");
+const express = require('express');
 
-const app = express(".");
-const userRouter = require("./user");
-const bookRouter = require("./book");
+const router = express.Router();
 
-app.use("/user/",userRouter);
-app.use("/book/",bookRouter);
+const userRouter = require("./user").router;
+const bookRouter = require("./book").router;
 
-module.exports = app;
+router.use("/user/",userRouter);
+router.use("/book/",bookRouter);
+
+module.exports = router;

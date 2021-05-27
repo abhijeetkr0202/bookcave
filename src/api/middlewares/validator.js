@@ -1,7 +1,7 @@
 const { body, check } = require("express-validator");
 
 
-const db = require("../../app");
+const db = require("../../server");
 
 const collectionName = "logincred";
 

@@ -1,5 +1,7 @@
 const passport = require("passport");
-const router = require(".");
+const express = require('express');
+
+const router = express.Router();
 
 
 const deleteCall = require("./book/deleteBook");
@@ -38,6 +40,6 @@ router.delete('/delete/:bid', AUTH_MIDDLEWHERE, deleteCall.deleteBookRequest());
 router.get('/def/:word/:lang', dictionaryCall.getMeaningRequest());
 
 
-module.exports = router;
+module.exports = {router};
 
 

@@ -1,5 +1,7 @@
 const passport = require("passport");
-const router = require(".");
+const express = require('express');
+
+const router = express.Router();
 
 
 
@@ -27,4 +29,4 @@ router.delete('/profile', AUTH_MIDDLEWHERE, profileCall.deleteProfileRequest());
 
 
 
-module.exports = router;
+module.exports = {router};

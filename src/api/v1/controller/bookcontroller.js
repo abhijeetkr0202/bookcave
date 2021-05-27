@@ -5,8 +5,8 @@ const FileType = require('file-type');
 
 
 const apiResponse = require('../../helpers/apiResponse');
-const db = require("../../../app");
-const passportFunctions = require("../../../config/passport");
+const db = require("../../../server");
+const {parseDatafromToken} = require("../../helpers/jwtUtility");
 const bookValidator = require("../../middlewares/validator");
 const bookSchemaValidate = require("../../../models/book").bookDataValidate;
 
@@ -80,7 +80,7 @@ function addbookFunc(req, res) {
     else
     {
         const {bookfile} = req.files;
-        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
         awsUpload(bookfile, uid)
             .then((awsdata) => {
                 if (typeof req.body.booktitle === 'undefined') {
@@ -140,7 +140,7 @@ function fetchAddBookFunc(req, res) {
 
     else
     {
-        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
 
         fetchFromUrl(req.body.filelink)
         .then((response) => Promise.resolve(response.buffer()))
@@ -219,7 +219,7 @@ function fetchAddBookFunc(req, res) {
  * @param {object} res 
  */
 function listbookFunc(req, res) {
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const params = {
         db: db.getDb(),
         collectionName: bookCollection,
@@ -294,7 +294,7 @@ function deletebook(paramObj) {
  * @param {object} res 
  */
 function deleteFunc(req, res) {
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const bid = new mongo.ObjectID(req.params.bid);
     const paramObj = {
         db: db.getDb(),
@@ -402,7 +402,7 @@ function deleteFunc(req, res) {
  * @param {object} res 
  */
 function getRecentFunc(req, res) {
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const dbobj = {
         db: db.getDb(),
         collectionName: bookCollection,
@@ -454,7 +454,7 @@ function updateMarkedPagesFunc(req, res) {
     }
     else
     {
-        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
         const bid = new mongo.ObjectID(req.params.bid);
         const newData = {
             markedpages: req.body.markedpages
@@ -485,7 +485,7 @@ function updateBooktitleFunc(req, res) {
     }
     else
     {
-        const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+        const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
         const bid = new mongo.ObjectID(req.params.bid);
         const newData = {
             booktitle: req.body.booktitle
@@ -524,7 +524,7 @@ function getBookDetail(params) {
  * @param {object} res 
  */
 function retrieveBookFunc(req, res) {
-    const uid = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const uid = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const bid = new mongo.ObjectID(req.params.bid);
     const params = {
         db: db.getDb(),

@@ -6,8 +6,9 @@ const mongo = require('mongodb');
 
 
 const apiResponse = require("../../helpers/apiResponse");
-const db = require("../../../app");
-const passportFunctions = require("../../../config/passport");
+const db = require("../../../server");
+const {issueJWT} = require("../../helpers/jwtUtility");
+const {parseDatafromToken} = require("../../helpers/jwtUtility");
 const UserValidator = require("../../middlewares/validator");
 const userSchemaValidate = require("../../../models/user").userDataValidate;
 
@@ -87,7 +88,7 @@ function signupFunc(req, res) {
             }
             return Promise.all([insertSignupData(dataObject),createUserIndex(indexObject)]);
         })
-        .then((jwtData) => Promise.resolve(passportFunctions.issueJWT(jwtData[0])))
+        .then((jwtData) => Promise.resolve(issueJWT(jwtData[0])))
         .then((responseData) => apiResponse.successResponseWithToken(res, responseData))
         .catch((error) => apiResponse.ErrorResponse(res,error.message));
     }
@@ -137,7 +138,7 @@ function signinFunc(req, res) {
                 bcrypt.compare(req.body.password, data.password)
                     .then((same) => {
                         if (same) {
-                            return apiResponse.successResponseWithToken(res, passportFunctions.issueJWT(data));
+                            return apiResponse.successResponseWithToken(res, issueJWT(data));
                         }
                         return apiResponse.unauthorizedResponse(res, "Wrong password");
                     })
@@ -163,7 +164,7 @@ function signinFunc(req, res) {
  */
 function getprofile(req, res) {
 
-    const objId  = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const objId  = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const paramObj = {
         query: { "_id": objId },
         collectionName: userCollection,
@@ -204,7 +205,7 @@ function getprofile(req, res) {
  * @returns 
  */
 function editprofile(req, res) {
-    const objId = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const objId = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
 
     const newData = {
         username: req.body.username
@@ -260,7 +261,7 @@ function deleteUsersBookData(Obj) {
  */
 function deleteprofile(req, res) {
 
-    const objId = new mongo.ObjectID(passportFunctions.parseDatafromToken(req.get('Authorization'))._id);
+    const objId = new mongo.ObjectID(parseDatafromToken(req.get('Authorization'))._id);
     const obj = {
         query: { _id: objId },
         userdb: db.getDb().collection(userCollection)
