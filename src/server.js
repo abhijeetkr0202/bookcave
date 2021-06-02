@@ -11,6 +11,9 @@ let dbObj = null;
 let mongoClient = null;
 const MONGODB_URL = mongoURL;
 
+
+
+
 /**
  * @description Closes mongoDb connection 
  * */
@@ -20,6 +23,9 @@ const MONGODB_URL = mongoURL;
         process.exit(1);
     });
 }
+
+
+
 
 
 
@@ -39,6 +45,11 @@ function createMongoConn(MONGO_URL)
             pinolog.error(error.message);
         })
 }
+
+
+
+
+
 
 
 /**
@@ -71,6 +82,8 @@ function createMongoConn(MONGO_URL)
 
 
 
+
+
 /**
  * 
  * @returns database object from MongoClient Connection 
@@ -86,6 +99,8 @@ function runServer(appObj){
     
 };
  
+
+
 
 
 

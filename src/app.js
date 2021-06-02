@@ -1,16 +1,12 @@
 const express = require('express');
 const passport = require('passport');
-
-const app = express();
 const fileUpload = require('express-fileupload');
 const cors = require('cors');
-const {pinolog} = require('./api/middlewares/logger');
+
+const app = express();
+
 const {logger} = require("./api/middlewares/logger");
-
 const {passportFunction} = require('./config/passport');
-
-
-
 const apiRouterV1 = require('./api/v1/routes/api');
 
 
@@ -29,5 +25,5 @@ app.use('/v1', apiRouterV1);
 
 
 
-module.exports = {app,pinolog}
+module.exports = {app}
 
