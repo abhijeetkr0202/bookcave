@@ -7,9 +7,9 @@ addFormats(ajv)
 const BookSchema = {
     type: "object",
     properties: {
-        booktitle: {type: "string",maxLength:30},
+        booktitle: {type: "string",maxLength:100},
         bookfilepath: {type: "string",format:"uri"},
-        bookfilename: {type: "string",maxLength:30},
+        bookfilename: {type: "string",maxLength:100},
         lastvisitedpage: {type: "integer"},
         markedpages: {type: "array"},
         uploadedOn: {type: "number"},

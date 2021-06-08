@@ -172,7 +172,7 @@ function fetchAddBookFunc(req, res) {
                         "uploadedOn": Date.now(),
                         "lastvisitedon": Date.now()
                         }
-                        if(!bookSchemaValidate)
+                        if(!bookSchemaValidate(bookData))
                         {
                             throw new Error("Book Data Failed Schema Validation")
                         }
