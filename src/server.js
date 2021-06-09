@@ -67,9 +67,6 @@ function createMongoConn(MONGO_URL)
         }).then(() => {
             pinolog.info(`SERVER STARTED ON PORT NUMBER ${  port}`);
             process.on('exit', shutdown);
-            process.on('SIGINT', shutdown);
-            process.on('SIGTERM', shutdown);
-            process.on('SIGKILL', shutdown);
             process.on('uncaughtException', shutdown);
         })
         .catch((error) => {
